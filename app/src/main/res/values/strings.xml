@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Timing</string>
+    <string name="firebase_database_timed_activities" translatable="false">timed-activities</string>
 </resources>
