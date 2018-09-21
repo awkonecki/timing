@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -21,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
 
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
         // 1. setup the firebase database instance.
         mFirebaseDatabase = FirebaseDatabase.getInstance();
+
+        // 1. setup the firebase auth instance.
+        mFirebaseAuth = FirebaseAuth.getInstance();
 
         // 2. setup the reference position.
         mDatabaseReference = mFirebaseDatabase
@@ -67,5 +74,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // 2. Create the Auth State listener.
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                Log.d(TAG, "onAuthStateChanged.");
+            }
+        };
+
+        // 3. Add to the auth instance.
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
     }
 }

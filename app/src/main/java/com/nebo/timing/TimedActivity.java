@@ -9,6 +9,10 @@ public class TimedActivity {
         this.mActivityName = name;
     }
 
+    public void setActivityName(String name) {
+        this.mActivityName = name;
+    }
+
     public String getActivityName() {
         return this.mActivityName;
     }
