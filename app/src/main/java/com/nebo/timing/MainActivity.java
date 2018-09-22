@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -20,6 +22,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
+
+    private String mCurrentUser = null;
 
     private final String TAG = "MainActivity";
     private final int RC_SIGN_IN = 1;
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onAuthStateChanged.");
 
                 if (firebaseAuth.getCurrentUser() == null) {
+                    Log.d(TAG, "onAuthStateChanged - null user");
                     // No one is signed-in
                     startActivityForResult(
                             AuthUI.getInstance()
@@ -99,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     // someone is already sign-in
-
+                    Log.d(TAG, "onAuthStateChanged - valid user");
                 }
 
             }
@@ -107,6 +112,25 @@ public class MainActivity extends AppCompatActivity {
 
         // 3. Add to the auth instance.
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+
+        // 4. Support for signout based on user event.
+        Button signoutBtn = findViewById(R.id.btn_firebase_logout);
+        signoutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "signoutBtn onClick");
+                AuthUI.getInstance()
+                        .signOut(MainActivity.this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // user is now signed out
+                                // startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                finish();
+                            }
+                        });
+
+            }
+        });
 
         Log.d(TAG, "onCreate");
     }
