@@ -10,6 +10,10 @@ import android.view.View;
 import android.widget.Button;
 
 import com.firebase.ui.auth.AuthUI;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -18,8 +22,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -130,6 +139,33 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(new DataPoint[] {
+                new DataPoint(0, 1),
+                new DataPoint(1, 5),
+                new DataPoint(2, 3),
+                new DataPoint(3, 2),
+                new DataPoint(4, 6)
+        });
+        graph.addSeries(series);
+
+        LineChart chart = (LineChart) findViewById(R.id.chart);
+
+        List<Entry> entries = new ArrayList<Entry>();
+        entries.add(new Entry(0, 1));
+        entries.add(new Entry(1, 5));
+        entries.add(new Entry(2, 3));
+        entries.add(new Entry(3, 2));
+        entries.add(new Entry(4, 6));
+
+        LineDataSet dataSet = new LineDataSet(entries, "Label"); // add entries to dataset
+        // dataSet.setColor(...);
+        // dataSet.setValueTextColor(...);
+
+        LineData lineData = new LineData(dataSet);
+        chart.setData(lineData);
+        chart.invalidate(); // refresh
 
         Log.d(TAG, "onCreate");
     }
