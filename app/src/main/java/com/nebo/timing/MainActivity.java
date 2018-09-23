@@ -123,11 +123,10 @@ public class MainActivity extends AppCompatActivity {
                         .signOut(MainActivity.this)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             public void onComplete(@NonNull Task<Void> task) {
-                                // user is now signed out
-                                // startActivity(new Intent(MainActivity.this, SignInActivity.class));
                                 finish();
                             }
                         });
+
 
             }
         });
@@ -151,5 +150,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
+
+        if (mAuthStateListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+            mAuthStateListener = null;
+        }
     }
 }
