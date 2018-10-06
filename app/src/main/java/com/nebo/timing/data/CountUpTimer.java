@@ -24,17 +24,18 @@ public class CountUpTimer  {
         mMillisInFuture = futureMillis;
         mCountDownInterval = interval;
         mCallback = callback;
-        restart();
     }
 
     // Support if the timer needs to be stopped.
     public void stop() {
-        mCountDownTimer.cancel();
-        mCountDownTimer = null;
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
+        }
         mTimeRemaining = -1;
     }
 
-    public void restart() {
+    public void play() {
         long time = 0;
 
         if (mTimeRemaining != -1) {
@@ -51,8 +52,10 @@ public class CountUpTimer  {
     public void pause() {
         // Can cancel the remaining time but leave the time remaining alone such
         // that if the timer is restarted it will use the `time remaining`.
-        mCountDownTimer.cancel();
-        mCountDownTimer = null;
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
+        }
     }
 
     private class Timer extends CountDownTimer {
@@ -87,6 +90,6 @@ public class CountUpTimer  {
         mTimeRemaining = -1;
 
         // 3. Reset the timer to keep going.
-        restart();
+        play();
     }
 }

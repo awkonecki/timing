@@ -18,7 +18,7 @@ import com.nebo.timing.databinding.FragmentStopWatchBinding;
 public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerEvents {
     private static final String TAG = "StopWatchFragment";
     FragmentStopWatchBinding mBinding = null;
-    CountUpTimer mCountUpTimer = null;
+    CountUpTimer mCountUpTimer = new CountUpTimer(1000L, 1000L, StopWatchFragment.this);;
     int count = 0;
 
     @Nullable
@@ -31,28 +31,43 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
             @Override
             public void onClick(View v) {
                 mBinding.ibPlay.setEnabled(false);
-                mCountUpTimer = new CountUpTimer(1000L, 1000L, StopWatchFragment.this);
+                mCountUpTimer.play();
             }
         });
 
         mBinding.ibPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if (mCountUpTimer != null) {
+                    mCountUpTimer.pause();
+                    mBinding.ibPlay.setEnabled(true);
+                }
             }
         });
 
         mBinding.ibReplay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mBinding.tvTime.setText("00:00:00");
+                mBinding.ibPlay.setEnabled(false);
 
+                if (mCountUpTimer != null) {
+                    mCountUpTimer.stop();
+                    mCountUpTimer.play();
+                }
+                else {
+                    mCountUpTimer.play();
+                }
             }
         });
 
         mBinding.ibStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                mBinding.ibPlay.setEnabled(true);
+                if (mCountUpTimer != null) {
+                    mCountUpTimer.stop();
+                }
             }
         });
 
