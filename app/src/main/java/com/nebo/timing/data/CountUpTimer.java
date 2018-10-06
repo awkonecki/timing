@@ -75,11 +75,13 @@ public class CountUpTimer  {
     }
 
     private void onTick(long millisUntilFinished) {
-        // 1. need to save state to support pause & resume functionality.
-        mTimeRemaining = millisUntilFinished;
+        if (mCountDownInterval != mMillisInFuture) {
+            // 1. need to save state to support pause & resume functionality.
+            mTimeRemaining = millisUntilFinished;
 
-        // 2. Operate on the caller defined onTick method.
-        mCallback.onTick(millisUntilFinished);
+            // 2. Operate on the caller defined onTick method.
+            mCallback.onTick(millisUntilFinished);
+        }
     }
 
     private void onFinish() {

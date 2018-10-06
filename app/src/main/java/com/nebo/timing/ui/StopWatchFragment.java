@@ -82,7 +82,9 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
     }
 
     @Override
-    public void onTick(long millisUntilFinished) {}
+    public void onTick(long millisUntilFinished) {
+        Log.d(TAG, "onTick");
+    }
 
     @Override
     public void onFinish() {
