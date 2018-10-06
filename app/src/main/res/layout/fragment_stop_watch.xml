@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" >
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="11:22" />
+
+        <ImageButton
+            android:id="@+id/ib_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_play_circle_outline_black_24dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_time"
+            app:layout_constraintStart_toStartOf="@id/tv_time"/>
+
+        <ImageButton
+            android:id="@+id/ib_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_pause_circle_outline_black_24dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_time"
+            app:layout_constraintStart_toEndOf="@id/ib_play" />
+
+        <ImageButton
+            android:id="@+id/ib_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_stop_black_24dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_time"
+            app:layout_constraintStart_toEndOf="@id/ib_pause" />
+
+        <ImageButton
+            android:id="@+id/ib_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_playlist_add_black_24dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_time"
+            app:layout_constraintStart_toEndOf="@id/ib_stop" />
+
+        <ImageButton
+            android:id="@+id/ib_replay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_replay_black_24dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_time"
+            app:layout_constraintStart_toEndOf="@id/ib_save" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_saved_times"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            app:layout_constraintTop_toBottomOf="@id/ib_play"
+            app:layout_constraintStart_toStartOf="@id/ib_play" />
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

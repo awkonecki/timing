@@ -3,6 +3,8 @@ package com.nebo.timing;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,6 +27,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.nebo.timing.ui.StopWatchFragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -166,6 +169,11 @@ public class MainActivity extends AppCompatActivity {
         LineData lineData = new LineData(dataSet);
         chart.setData(lineData);
         chart.invalidate(); // refresh
+
+        // Fragment creation
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = new StopWatchFragment();
+        fragmentManager.beginTransaction().add(R.id.fragment_stop_watch, fragment).commit();
 
         Log.d(TAG, "onCreate");
     }

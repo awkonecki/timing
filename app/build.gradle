@@ -16,6 +16,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -47,6 +51,8 @@ dependencies {
 
     implementation 'com.jjoe64:graphview:4.2.2'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
+
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
 }
 
 // Reference https://firebase.google.com/docs/android/setup?authuser=0
