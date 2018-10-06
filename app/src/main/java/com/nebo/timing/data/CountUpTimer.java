@@ -8,6 +8,7 @@ public class CountUpTimer  {
     private final long mMillisInFuture;
     private final long mCountDownInterval;
     private Timer mCountDownTimer;
+    private long mTimeRemaining = -1;
 
     // Provide a way to define an interface that of which the CountUpTimer will
     // execute in the `onFinish` method.
@@ -26,19 +27,32 @@ public class CountUpTimer  {
         restart();
     }
 
-    // Support if the timer needs to be canceled.
-    public void cancel() {
+    // Support if the timer needs to be stopped.
+    public void stop() {
         mCountDownTimer.cancel();
         mCountDownTimer = null;
+        mTimeRemaining = -1;
     }
 
     public void restart() {
-        mCountDownTimer = new Timer(mMillisInFuture, mCountDownInterval);
+        long time = 0;
+
+        if (mTimeRemaining != -1) {
+            time = mTimeRemaining;
+        }
+        else {
+            time = mMillisInFuture;
+        }
+
+        mCountDownTimer = new Timer(time, mCountDownInterval);
         mCountDownTimer.start();
     }
 
     public void pause() {
-
+        // Can cancel the remaining time but leave the time remaining alone such
+        // that if the timer is restarted it will use the `time remaining`.
+        mCountDownTimer.cancel();
+        mCountDownTimer = null;
     }
 
     private class Timer extends CountDownTimer {
@@ -48,7 +62,7 @@ public class CountUpTimer  {
 
         @Override
         public void onTick(long millisUntilFinished) {
-            mCallback.onTick(millisUntilFinished);
+            CountUpTimer.this.onTick(millisUntilFinished);
         }
 
         @Override
@@ -57,11 +71,22 @@ public class CountUpTimer  {
         }
     }
 
+    private void onTick(long millisUntilFinished) {
+        // 1. need to save state to support pause & resume functionality.
+        mTimeRemaining = millisUntilFinished;
+
+        // 2. Operate on the caller defined onTick method.
+        mCallback.onTick(millisUntilFinished);
+    }
+
     private void onFinish() {
         // 1. use the instance provided call back.
         mCallback.onFinish();
 
-        // 2. Reset the timer to keep going.
+        // 2. clear the time remaining.
+        mTimeRemaining = -1;
+
+        // 3. Reset the timer to keep going.
         restart();
     }
 }

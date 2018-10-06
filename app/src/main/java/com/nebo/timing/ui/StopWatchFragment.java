@@ -2,7 +2,6 @@ package com.nebo.timing.ui;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -33,6 +32,34 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
             public void onClick(View v) {
                 mBinding.ibPlay.setEnabled(false);
                 mCountUpTimer = new CountUpTimer(1000L, 1000L, StopWatchFragment.this);
+            }
+        });
+
+        mBinding.ibPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        mBinding.ibReplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        mBinding.ibStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        mBinding.ibSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
