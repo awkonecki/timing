@@ -88,6 +88,26 @@ public class StopWatch {
     }
 
     /**
+     * @func StopWatch
+     * @brief Constructor for the stopwatch class object.
+     * @param futureTime - represents the interval in which the underlying countuptimer cycles on.
+     * @param futureIntervals - represents how frequent w.r.t the interval that the time will be
+     *                          updated.
+     * @param callback - controlling class defined interface that informs the object where to send
+     *                   the current time elapsed on tick events.
+     * @param baseTime - indicates the starting base time for the stopwatch.
+     */
+    public StopWatch(
+            long futureTime,
+            long futureIntervals,
+            @NonNull StopWatchTickEvents callback,
+            long baseTime)
+    {
+        this(futureTime, futureIntervals, callback);
+        mBaseMilliSeconds = baseTime;
+    }
+
+    /**
      * @func play
      * @brief transition to the play state for the StopWatch object.
      */
