@@ -1,6 +1,7 @@
 package com.nebo.timing.data;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 /**
  * @class StopWatch
@@ -24,14 +25,16 @@ public class StopWatch {
     //**********************************************************************************************
     private CountUpTimer mCountUpTimer = null;
     private final long mFutureTime, mIntervalTime;
-    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L;
+    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L, prevTickValue = 0L;
     private StopWatchState mState = StopWatchState.STOPPED;
     private StopWatchTickEvents mCallback = null;
 
     private class CountUpTimerInterface implements CountUpTimer.OnTimerEvents {
         @Override
         public void onTick(long millisUntilFinished) {
-            mMilliSeconds += (mFutureTime - millisUntilFinished);
+            Log.d("onTick", Long.toString(mFutureTime - millisUntilFinished));
+            mMilliSeconds += ((mFutureTime - millisUntilFinished) - (mFutureTime - prevTickValue));
+            prevTickValue = millisUntilFinished;
             mCallback.tickEvent(mMilliSeconds + mBaseMilliSeconds);
         }
 
@@ -39,6 +42,7 @@ public class StopWatch {
         public void onFinish() {
             mBaseMilliSeconds += mFutureTime;
             mMilliSeconds = 0L;
+            prevTickValue = 0L;
         }
     }
 
