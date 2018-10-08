@@ -25,24 +25,21 @@ public class StopWatch {
     //**********************************************************************************************
     private CountUpTimer mCountUpTimer = null;
     private final long mFutureTime, mIntervalTime;
-    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L, prevTickValue = 0L;
+    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L;
     private StopWatchState mState = StopWatchState.STOPPED;
     private StopWatchTickEvents mCallback = null;
 
     private class CountUpTimerInterface implements CountUpTimer.OnTimerEvents {
         @Override
         public void onTick(long millisUntilFinished) {
-            Log.d("onTick", Long.toString(mFutureTime - millisUntilFinished));
-            mMilliSeconds += ((mFutureTime - millisUntilFinished) - (mFutureTime - prevTickValue));
-            prevTickValue = millisUntilFinished;
-            mCallback.tickEvent(mMilliSeconds + mBaseMilliSeconds);
+            mCallback.tickEvent((mMilliSeconds - millisUntilFinished) + mBaseMilliSeconds);
+            mMilliSeconds = millisUntilFinished;
         }
 
         @Override
         public void onFinish() {
             mBaseMilliSeconds += mFutureTime;
-            mMilliSeconds = 0L;
-            prevTickValue = 0L;
+            mMilliSeconds = mFutureTime;
         }
     }
 
@@ -119,13 +116,13 @@ public class StopWatch {
         switch (mState) {
             case PLAYING:
                 mCountUpTimer.stop();
-                mMilliSeconds = 0L;
+                mMilliSeconds = mFutureTime;
                 mBaseMilliSeconds = 0L;
                 break;
             case PAUSED:
                 break;
             case STOPPED:
-                mMilliSeconds = 0L;
+                mMilliSeconds = mFutureTime;
                 mBaseMilliSeconds = 0L;
                 break;
             default:
@@ -148,7 +145,7 @@ public class StopWatch {
             case PLAYING:
             case PAUSED:
             case STOPPED:
-                mMilliSeconds = 0L;
+                mMilliSeconds = mFutureTime;
                 mBaseMilliSeconds = 0L;
                 break;
             default:

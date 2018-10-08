@@ -70,9 +70,6 @@ public class StopWatchFragment extends Fragment {
                 sb.append(Long.toString(totalSeconds));
             }
 
-            sb.append('.');
-            sb.append(Long.toString(totalMilli));
-
             return sb.toString();
         }
     }
