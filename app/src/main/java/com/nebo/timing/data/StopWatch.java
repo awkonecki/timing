@@ -160,10 +160,21 @@ public class StopWatch {
     /**
      * @func getState
      * @brief Obtain the current state of which the StopWatch objec is in.
-     * @return
+     * @return State of the StopWatch
      */
     public StopWatchState getState() {
         return mState;
+    }
+
+    /**
+     * @func getLastUpdatedTime
+     * @brief allows a way to obtain the last time that elapsed with the StopWatch object.  Does not
+     *        represent the entire amount of time elapsed since the StopWatch object only sees up
+     *        to the class defined interval amount.
+     * @return the elapsed witnessed time by the `StopWatch` object.
+     */
+    public long getLastUpdatedTime() {
+        return mBaseMilliSeconds + mMilliSeconds;
     }
 
     /**

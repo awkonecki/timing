@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 
 import com.nebo.timing.R;
 
-import com.nebo.timing.data.CountUpTimer;
 import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.FragmentStopWatchBinding;
 
