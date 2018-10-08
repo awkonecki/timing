@@ -13,13 +13,24 @@ import android.view.ViewGroup;
 import com.nebo.timing.R;
 
 import com.nebo.timing.data.CountUpTimer;
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.FragmentStopWatchBinding;
 
-public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerEvents {
+public class StopWatchFragment extends Fragment {
     private static final String TAG = "StopWatchFragment";
-    FragmentStopWatchBinding mBinding = null;
-    CountUpTimer mCountUpTimer = new CountUpTimer(1000L, 1000L, StopWatchFragment.this);;
-    int count = 0;
+    private FragmentStopWatchBinding mBinding = null;
+    private StopWatch mStopWatch = new StopWatch(5000, 2000, new TimeIntervalTick());
+
+    private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
+        @Override
+        public void tickEvent(long milliSecondsElapsed) {
+            mBinding.tvTime.setText(buildTimeStamp(milliSecondsElapsed));
+        }
+
+        private String buildTimeStamp(long milliSecondsElapsed) {
+            return "00:00:00";
+        }
+    }
 
     @Nullable
     @Override
@@ -30,44 +41,28 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
         mBinding.ibPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.ibPlay.setEnabled(false);
-                mCountUpTimer.play();
+                mStopWatch.play();
             }
         });
 
         mBinding.ibPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.pause();
-                    mBinding.ibPlay.setEnabled(true);
-                }
+                mStopWatch.pause();
             }
         });
 
         mBinding.ibReplay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.tvTime.setText("00:00:00");
-                mBinding.ibPlay.setEnabled(false);
-
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.stop();
-                    mCountUpTimer.play();
-                }
-                else {
-                    mCountUpTimer.play();
-                }
+                mStopWatch.play();
             }
         });
 
         mBinding.ibStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.ibPlay.setEnabled(true);
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.stop();
-                }
+                mStopWatch.stop();
             }
         });
 
@@ -79,17 +74,5 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
         });
 
         return mBinding.getRoot();
-    }
-
-    @Override
-    public void onTick(long millisUntilFinished) {
-        Log.d(TAG, "onTick");
-    }
-
-    @Override
-    public void onFinish() {
-        count++;
-        Log.d(TAG, "onFinish Callback " + Integer.toString(count));
-        mBinding.tvTime.setText(Integer.toString(count));
     }
 }
