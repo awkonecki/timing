@@ -187,6 +187,11 @@ public class StopWatchFragment extends Fragment {
         mBinding.ibReplay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mStopWatch.stop();
+                mLapTimes.clear();
+                ((LapAdapter)mBinding.rvLaps.getAdapter()).clearLapTimes();
+                ((LapAdapter) mBinding.rvLaps.getAdapter()).addNewLapTime(getString(R.string.default_time));
+                mLapTimes.add(0, 0L);
                 mStopWatch.play();
             }
         });

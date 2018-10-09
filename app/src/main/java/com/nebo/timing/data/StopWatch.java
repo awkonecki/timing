@@ -123,6 +123,7 @@ public class StopWatch {
                 prevTime = -1;
                 break;
             case PAUSED:
+                prevTime = System.currentTimeMillis();
                 break;
             case STOPPED:
                 mMilliSeconds = 0L;
