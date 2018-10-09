@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -73,7 +74,7 @@ public class StopWatchFragment extends Fragment {
             LapElementBinding mBinding = null;
 
             private LapView(LapElementBinding lapElementBinding) {
-                super(lapElementBinding);
+                super(lapElementBinding.getRoot());
                 mBinding = lapElementBinding;
             }
 
@@ -87,7 +88,9 @@ public class StopWatchFragment extends Fragment {
     private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
         @Override
         public void tickEvent(long milliSecondsElapsed) {
-            mBinding.tvTime.setText(buildTimeStamp(milliSecondsElapsed));
+            String displayText = buildTimeStamp(milliSecondsElapsed);
+            mBinding.tvTime.setText(displayText);
+            ((LapAdapter)(mBinding.rvLaps.getAdapter())).updateLapTime(displayText);
         }
 
         private String buildTimeStamp(long milliSecondsElapsed) {
@@ -149,6 +152,7 @@ public class StopWatchFragment extends Fragment {
         mBinding.ibPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ((LapAdapter)mBinding.rvLaps.getAdapter()).addNewLapTime(getString(R.string.default_time));
                 mStopWatch.play();
             }
         });
@@ -181,8 +185,9 @@ public class StopWatchFragment extends Fragment {
             }
         });
 
-
-
+        mBinding.rvLaps.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        mBinding.rvLaps.setHasFixedSize(true);
+        mBinding.rvLaps.setAdapter(new LapAdapter());
         return mBinding.getRoot();
     }
 

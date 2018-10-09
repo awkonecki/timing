@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
+        multiDexEnabled true
         applicationId "com.nebo.timing"
         minSdkVersion 20
         targetSdkVersion 27
@@ -23,6 +24,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.android.support:multidex:1.0.3'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1-rc02'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
