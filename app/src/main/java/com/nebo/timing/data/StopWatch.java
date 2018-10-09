@@ -25,22 +25,27 @@ public class StopWatch {
     //**********************************************************************************************
     private CountUpTimer mCountUpTimer = null;
     private final long mFutureTime, mIntervalTime;
-    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L;
+    private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L, prevTime = -1L;
     private StopWatchState mState = StopWatchState.STOPPED;
     private StopWatchTickEvents mCallback = null;
 
     private class CountUpTimerInterface implements CountUpTimer.OnTimerEvents {
         @Override
         public void onTick(long millisUntilFinished) {
-            mCallback.tickEvent((mMilliSeconds - millisUntilFinished) + mBaseMilliSeconds);
-            mMilliSeconds = millisUntilFinished;
+            long time = System.currentTimeMillis();
+            if (prevTime == -1L) {
+                mMilliSeconds = mBaseMilliSeconds;
+            }
+            else {
+                mMilliSeconds += (time - prevTime);
+            }
+
+            prevTime = time;
+            mCallback.tickEvent(mMilliSeconds);
         }
 
         @Override
-        public void onFinish() {
-            mBaseMilliSeconds += mFutureTime;
-            mMilliSeconds = mFutureTime;
-        }
+        public void onFinish() {}
     }
 
     //**********************************************************************************************
@@ -106,6 +111,7 @@ public class StopWatch {
     {
         this(futureTime, futureIntervals, callback);
         mBaseMilliSeconds = baseTime;
+        mMilliSeconds = baseTime;
     }
 
     /**
@@ -116,14 +122,14 @@ public class StopWatch {
         switch (mState) {
             case PLAYING:
                 mCountUpTimer.stop();
-                mMilliSeconds = mFutureTime;
-                mBaseMilliSeconds = 0L;
+                mMilliSeconds = 0L;
+                prevTime = -1;
                 break;
             case PAUSED:
                 break;
             case STOPPED:
-                mMilliSeconds = mFutureTime;
-                mBaseMilliSeconds = 0L;
+                mMilliSeconds = 0L;
+                prevTime = -1;
                 break;
             default:
                 throw new java.lang.IllegalArgumentException(
@@ -145,8 +151,8 @@ public class StopWatch {
             case PLAYING:
             case PAUSED:
             case STOPPED:
-                mMilliSeconds = mFutureTime;
-                mBaseMilliSeconds = 0L;
+                mMilliSeconds = 0L;
+                prevTime = -1;
                 break;
             default:
                 throw new java.lang.IllegalArgumentException(
@@ -195,7 +201,7 @@ public class StopWatch {
      * @return the elapsed witnessed time by the `StopWatch` object.
      */
     public long getLastUpdatedTime() {
-        return mBaseMilliSeconds + mMilliSeconds;
+        return mMilliSeconds;
     }
 
     /**

@@ -70,6 +70,11 @@ public class StopWatchFragment extends Fragment {
                 sb.append(Long.toString(totalSeconds));
             }
 
+            sb.append('.').append(Long.toString(totalMilli));
+
+
+            Log.d("TAG", Long.toString(milliSecondsElapsed));
+
             return sb.toString();
         }
     }
