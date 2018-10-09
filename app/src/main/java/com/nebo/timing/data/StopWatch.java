@@ -24,7 +24,8 @@ public class StopWatch {
     // PRIVATE CLASS MEMBERS
     //**********************************************************************************************
     private CountUpTimer mCountUpTimer = null;
-    private final long mFutureTime, mIntervalTime;
+    private final static long sFUTURE_TIME = (-1L >>> 1);
+    private long mIntervalTime = 100L;
     private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L, prevTime = -1L;
     private StopWatchState mState = StopWatchState.STOPPED;
     private StopWatchTickEvents mCallback = null;
@@ -80,36 +81,30 @@ public class StopWatch {
     /**
      * @func StopWatch
      * @brief Constructor for the stopwatch class object.
-     * @param futureTime - represents the interval in which the underlying countuptimer cycles on.
-     * @param futureIntervals - represents how frequent w.r.t the interval that the time will be
-     *                          updated.
      * @param callback - controlling class defined interface that informs the object where to send
      *                   the current time elapsed on tick events.
      */
-    public StopWatch(long futureTime, long futureIntervals, @NonNull StopWatchTickEvents callback) {
-        mFutureTime = futureTime;
-        mIntervalTime = futureIntervals;
+    public StopWatch(@NonNull StopWatchTickEvents callback) {
         mCallback = callback;
-        mCountUpTimer = new CountUpTimer(futureTime, futureIntervals, new CountUpTimerInterface());
+        mCountUpTimer = new CountUpTimer(sFUTURE_TIME, mIntervalTime, new CountUpTimerInterface());
     }
 
     /**
      * @func StopWatch
      * @brief Constructor for the stopwatch class object.
-     * @param futureTime - represents the interval in which the underlying countuptimer cycles on.
-     * @param futureIntervals - represents how frequent w.r.t the interval that the time will be
-     *                          updated.
      * @param callback - controlling class defined interface that informs the object where to send
      *                   the current time elapsed on tick events.
+     * @param futureIntervals - represents how frequent w.r.t the interval that the time will be
+     *                          updated.
      * @param baseTime - indicates the starting base time for the stopwatch.
      */
     public StopWatch(
-            long futureTime,
-            long futureIntervals,
             @NonNull StopWatchTickEvents callback,
+            long futureIntervals,
             long baseTime)
     {
-        this(futureTime, futureIntervals, callback);
+        this(callback);
+        mIntervalTime = futureIntervals;
         mBaseMilliSeconds = baseTime;
         mMilliSeconds = baseTime;
     }

@@ -18,7 +18,7 @@ import com.nebo.timing.databinding.FragmentStopWatchBinding;
 public class StopWatchFragment extends Fragment {
     private static final String TAG = "StopWatchFragment";
     private FragmentStopWatchBinding mBinding = null;
-    private StopWatch mStopWatch = new StopWatch(1000, 100, new TimeIntervalTick());
+    private StopWatch mStopWatch = new StopWatch(new TimeIntervalTick());
 
     private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
         @Override
@@ -71,9 +71,6 @@ public class StopWatchFragment extends Fragment {
             }
 
             sb.append('.').append(Long.toString(totalMilli));
-
-
-            Log.d("TAG", Long.toString(milliSecondsElapsed));
 
             return sb.toString();
         }
