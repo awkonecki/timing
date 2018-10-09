@@ -25,7 +25,7 @@ public class StopWatch {
     //**********************************************************************************************
     private CountUpTimer mCountUpTimer = null;
     private final static long sFUTURE_TIME = (-1L >>> 1);
-    private long mIntervalTime = 100L;
+    private long mIntervalTime = sDEFAULT_TIME_INTERVAL;
     private long mMilliSeconds = 0L, mBaseMilliSeconds = 0L, prevTime = -1L;
     private StopWatchState mState = StopWatchState.STOPPED;
     private StopWatchTickEvents mCallback = null;
@@ -52,6 +52,8 @@ public class StopWatch {
     //**********************************************************************************************
     // PUBLIC CLASS MEMBERS
     //**********************************************************************************************
+
+    public final static long sDEFAULT_TIME_INTERVAL = 100L;
 
     /**
      * @enum StopWatchState
