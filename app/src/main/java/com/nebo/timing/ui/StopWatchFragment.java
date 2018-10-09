@@ -110,12 +110,14 @@ public class StopWatchFragment extends Fragment {
             }
         });
 
-        mBinding.ibSave.setOnClickListener(new View.OnClickListener() {
+        mBinding.ibLap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
             }
         });
+
+        
 
         return mBinding.getRoot();
     }
