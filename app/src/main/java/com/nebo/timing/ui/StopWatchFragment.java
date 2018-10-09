@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,11 +15,68 @@ import com.nebo.timing.R;
 
 import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.FragmentStopWatchBinding;
+import com.nebo.timing.databinding.LapElementBinding;
+
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class StopWatchFragment extends Fragment {
     private static final String TAG = "StopWatchFragment";
     private FragmentStopWatchBinding mBinding = null;
     private StopWatch mStopWatch = new StopWatch(new TimeIntervalTick());
+
+    private class LapAdapter extends RecyclerView.Adapter<LapAdapter.LapView> {
+        private LapElementBinding mBinding = null;
+
+        List<String> mDisplayTimes = new LinkedList<String>();
+
+        @NonNull
+        @Override
+        public LapView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.lap_element, parent, false);
+
+            mBinding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.lap_element, parent, false);
+
+            return new LapView(mBinding.getRoot());
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull LapView holder, int position) {
+
+        }
+
+        @Override
+        public int getItemCount() {
+            return mDisplayTimes.size();
+        }
+
+        public void updateLapTime(String displayTime) {
+            if (mDisplayTimes.isEmpty()) {
+                return;
+            }
+            else {
+                mDisplayTimes.set(0, displayTime);
+                notifyItemChanged(0);
+            }
+        }
+
+        public void addNewLapTime(String displayTime) {
+            mDisplayTimes.add(0, displayTime);
+            notifyDataSetChanged();
+        }
+
+        public class LapView extends RecyclerView.ViewHolder {
+
+            public LapView(LapElementBinding lapElementBinding) {
+                super(lapElementBinding);
+            }
+
+            public LapView(View itemView) {
+                super(itemView);
+            }
+        }
+    }
 
     private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
         @Override
@@ -117,7 +175,7 @@ public class StopWatchFragment extends Fragment {
             }
         });
 
-        
+
 
         return mBinding.getRoot();
     }
