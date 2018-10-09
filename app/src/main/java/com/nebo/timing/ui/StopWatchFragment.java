@@ -38,12 +38,14 @@ public class StopWatchFragment extends Fragment {
 
             mBinding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.lap_element, parent, false);
 
-            return new LapView(mBinding.getRoot());
+            return new LapView(mBinding);
         }
 
         @Override
         public void onBindViewHolder(@NonNull LapView holder, int position) {
-
+            if (position >= 0 && position < mDisplayTimes.size()) {
+                holder.bind(position, mDisplayTimes.get(position));
+            }
         }
 
         @Override
@@ -68,12 +70,16 @@ public class StopWatchFragment extends Fragment {
 
         public class LapView extends RecyclerView.ViewHolder {
 
-            public LapView(LapElementBinding lapElementBinding) {
+            LapElementBinding mBinding = null;
+
+            private LapView(LapElementBinding lapElementBinding) {
                 super(lapElementBinding);
+                mBinding = lapElementBinding;
             }
 
-            public LapView(View itemView) {
-                super(itemView);
+            public void bind(int lapPosition, String lapData) {
+                mBinding.tvLapid.setText("Lap " + Integer.toString(lapPosition));
+                mBinding.tvLaptime.setText(lapData);
             }
         }
     }
