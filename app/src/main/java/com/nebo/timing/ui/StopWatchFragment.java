@@ -12,14 +12,69 @@ import android.view.ViewGroup;
 
 import com.nebo.timing.R;
 
-import com.nebo.timing.data.CountUpTimer;
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.FragmentStopWatchBinding;
 
-public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerEvents {
+public class StopWatchFragment extends Fragment {
     private static final String TAG = "StopWatchFragment";
-    FragmentStopWatchBinding mBinding = null;
-    CountUpTimer mCountUpTimer = new CountUpTimer(1000L, 1000L, StopWatchFragment.this);;
-    int count = 0;
+    private FragmentStopWatchBinding mBinding = null;
+    private StopWatch mStopWatch = new StopWatch(new TimeIntervalTick());
+
+    private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
+        @Override
+        public void tickEvent(long milliSecondsElapsed) {
+            mBinding.tvTime.setText(buildTimeStamp(milliSecondsElapsed));
+        }
+
+        private String buildTimeStamp(long milliSecondsElapsed) {
+            long totalMilli = milliSecondsElapsed % 1000;
+            long totalSeconds = milliSecondsElapsed / 1000L;
+
+            long totalHours = totalSeconds / 3600L;
+            long totalMinutes = (totalSeconds - (totalHours * 3600L)) / 60L;
+            totalSeconds = (totalSeconds - (totalHours * 3600L) - (totalMinutes * 60L));
+
+            StringBuffer sb = new StringBuffer(getString(R.string.default_time).length());
+
+            if (totalHours == 0) {
+                sb.append("00:");
+            }
+            else if (totalHours < 10) {
+                sb.append("0").append(Long.toString(totalHours)).append(':');
+            }
+            else {
+                sb.append(Long.toString(totalHours)).append(':');
+            }
+
+            if (totalMinutes > 59) {
+                throw new java.lang.IllegalArgumentException(
+                        "Total Number of minutes must be less than 60 " + Long.toString(totalMinutes)
+                );
+            }
+            else if (totalMinutes < 10) {
+                sb.append('0').append(Long.toString(totalMinutes)).append(':');
+            }
+            else {
+                sb.append(Long.toString(totalMinutes)).append(':');
+            }
+
+            if (totalSeconds > 59) {
+                throw new java.lang.IllegalArgumentException(
+                        "Total Number of seconds must be less than 60 " + Long.toString(totalSeconds)
+                );
+            }
+            else if (totalSeconds < 10) {
+                sb.append('0').append(Long.toString(totalSeconds));
+            }
+            else {
+                sb.append(Long.toString(totalSeconds));
+            }
+
+            sb.append('.').append(Long.toString(totalMilli));
+
+            return sb.toString();
+        }
+    }
 
     @Nullable
     @Override
@@ -30,44 +85,28 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
         mBinding.ibPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.ibPlay.setEnabled(false);
-                mCountUpTimer.play();
+                mStopWatch.play();
             }
         });
 
         mBinding.ibPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.pause();
-                    mBinding.ibPlay.setEnabled(true);
-                }
+                mStopWatch.pause();
             }
         });
 
         mBinding.ibReplay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.tvTime.setText("00:00:00");
-                mBinding.ibPlay.setEnabled(false);
-
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.stop();
-                    mCountUpTimer.play();
-                }
-                else {
-                    mCountUpTimer.play();
-                }
+                mStopWatch.play();
             }
         });
 
         mBinding.ibStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBinding.ibPlay.setEnabled(true);
-                if (mCountUpTimer != null) {
-                    mCountUpTimer.stop();
-                }
+                mStopWatch.stop();
             }
         });
 
@@ -82,14 +121,8 @@ public class StopWatchFragment extends Fragment implements CountUpTimer.OnTimerE
     }
 
     @Override
-    public void onTick(long millisUntilFinished) {
-        Log.d(TAG, "onTick");
-    }
-
-    @Override
-    public void onFinish() {
-        count++;
-        Log.d(TAG, "onFinish Callback " + Integer.toString(count));
-        mBinding.tvTime.setText(Integer.toString(count));
+    public void onStop() {
+        super.onStop();
+        mStopWatch.stop();
     }
 }

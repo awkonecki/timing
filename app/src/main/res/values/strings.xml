@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Timing</string>
     <string name="firebase_database_timed_activities" translatable="false">timed-activities</string>
+    <string name="default_time" translatable="false">00:00:00.000</string>
 </resources>
