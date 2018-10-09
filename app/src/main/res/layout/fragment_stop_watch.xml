@@ -40,7 +40,7 @@
             app:layout_constraintStart_toEndOf="@id/ib_pause" />
 
         <ImageButton
-            android:id="@+id/ib_save"
+            android:id="@+id/ib_lap"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_playlist_add_black_24dp"
@@ -53,10 +53,10 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_replay_black_24dp"
             app:layout_constraintTop_toBottomOf="@id/tv_time"
-            app:layout_constraintStart_toEndOf="@id/ib_save" />
+            app:layout_constraintStart_toEndOf="@id/ib_lap" />
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_saved_times"
+            android:id="@+id/rv_laps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
