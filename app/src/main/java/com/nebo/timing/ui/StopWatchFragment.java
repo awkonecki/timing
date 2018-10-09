@@ -26,6 +26,8 @@ public class StopWatchFragment extends Fragment {
     private static final String TAG = "StopWatchFragment";
     private FragmentStopWatchBinding mBinding = null;
     private StopWatch mStopWatch = new StopWatch(new TimeIntervalTick());
+    private List<Long> mLapTimes = new LinkedList<Long>();
+    // private long mLastLapTime = 0L;
 
     private class LapAdapter extends RecyclerView.Adapter<LapAdapter.LapView> {
         private LapElementBinding mBinding = null;
@@ -45,7 +47,7 @@ public class StopWatchFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull LapView holder, int position) {
             if (position >= 0 && position < mDisplayTimes.size()) {
-                holder.bind(position, mDisplayTimes.get(position));
+                holder.bind(mDisplayTimes.size() - position, mDisplayTimes.get(position));
             }
         }
 
@@ -69,6 +71,11 @@ public class StopWatchFragment extends Fragment {
             notifyDataSetChanged();
         }
 
+        public void clearLapTimes() {
+            mDisplayTimes.clear();
+            notifyDataSetChanged();
+        }
+
         public class LapView extends RecyclerView.ViewHolder {
 
             LapElementBinding mBinding = null;
@@ -88,9 +95,19 @@ public class StopWatchFragment extends Fragment {
     private class TimeIntervalTick implements StopWatch.StopWatchTickEvents {
         @Override
         public void tickEvent(long milliSecondsElapsed) {
-            String displayText = buildTimeStamp(milliSecondsElapsed);
-            mBinding.tvTime.setText(displayText);
-            ((LapAdapter)(mBinding.rvLaps.getAdapter())).updateLapTime(displayText);
+            Long lastLapTime = 0L;
+            String totalTimeDisplay = null, lapTimeDisplay = null;
+
+            if (mLapTimes.size() > 1) {
+                lastLapTime = mLapTimes.get(1);
+            }
+
+            totalTimeDisplay = buildTimeStamp(milliSecondsElapsed);
+            Log.d(TAG, Long.toString(milliSecondsElapsed ) + " " + Long.toString(lastLapTime));
+            lapTimeDisplay = buildTimeStamp(milliSecondsElapsed - lastLapTime);
+            mBinding.tvTime.setText(totalTimeDisplay);
+            ((LapAdapter)(mBinding.rvLaps.getAdapter())).updateLapTime(lapTimeDisplay);
+            mLapTimes.set(0, milliSecondsElapsed);
         }
 
         private String buildTimeStamp(long milliSecondsElapsed) {
@@ -101,7 +118,7 @@ public class StopWatchFragment extends Fragment {
             long totalMinutes = (totalSeconds - (totalHours * 3600L)) / 60L;
             totalSeconds = (totalSeconds - (totalHours * 3600L) - (totalMinutes * 60L));
 
-            StringBuffer sb = new StringBuffer(getString(R.string.default_time).length());
+            StringBuilder sb = new StringBuilder(getString(R.string.default_time).length());
 
             if (totalHours == 0) {
                 sb.append("00:");
@@ -152,7 +169,10 @@ public class StopWatchFragment extends Fragment {
         mBinding.ibPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((LapAdapter)mBinding.rvLaps.getAdapter()).addNewLapTime(getString(R.string.default_time));
+                if (mBinding.rvLaps.getAdapter().getItemCount() == 0) {
+                    ((LapAdapter) mBinding.rvLaps.getAdapter()).addNewLapTime(getString(R.string.default_time));
+                    mLapTimes.add(0, 0L);
+                }
                 mStopWatch.play();
             }
         });
@@ -175,13 +195,17 @@ public class StopWatchFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mStopWatch.stop();
+                mLapTimes.clear();
+                ((LapAdapter)mBinding.rvLaps.getAdapter()).clearLapTimes();
             }
         });
 
         mBinding.ibLap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                ((LapAdapter)mBinding.rvLaps.getAdapter()).addNewLapTime(getString(R.string.default_time));
+                mLapTimes.add(0, 0L);
+                // mLapTimes.add(mLastLapTime);
             }
         });
 
