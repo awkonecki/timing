@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.nebo.timing.R;
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.FragmentElapsedTimeBinding;
 
 public class ElapsedTimeFragment extends Fragment {
@@ -27,6 +28,16 @@ public class ElapsedTimeFragment extends Fragment {
                 R.layout.fragment_elapsed_time,
                 container,
                 false);
+
+        // Set the tv to the default
+        mBinding.tvElapsedTime.setText(StopWatch.buildTimeStamp(0L));
+
         return mBinding.getRoot();
+    }
+
+    public void updateElapsedTime(String time) {
+        if (mBinding != null) {
+            mBinding.tvElapsedTime.setText(time);
+        }
     }
 }

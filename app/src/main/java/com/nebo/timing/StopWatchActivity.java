@@ -8,15 +8,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.ActivityStopwatchBinding;
 import com.nebo.timing.ui.ElapsedTimeFragment;
 import com.nebo.timing.ui.LapTimesFragment;
 import com.nebo.timing.ui.StopWatchActionsFragment;
 import com.nebo.timing.ui.StopWatchActionsFragment.ACTIONS;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class StopWatchActivity extends AppCompatActivity implements
-        StopWatchActionsFragment.StopWatchActions {
-    ActivityStopwatchBinding mBinding = null;
+        StopWatchActionsFragment.StopWatchActions,
+        StopWatch.StopWatchTickEvents {
+
+    private ActivityStopwatchBinding mBinding = null;
+    private StopWatch mStopWatch = null;
+    private List<Long> mLaps = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,6 +41,12 @@ public class StopWatchActivity extends AppCompatActivity implements
                 .add(mBinding.rlLapTimes.getId(), lapTimesFragment)
                 .add(mBinding.rlStopwatchActions.getId(), stopWatchActionsFragment)
                 .commit();
+
+        // Create the stopwatch object.
+        mStopWatch = new StopWatch(this);
+
+        // Create the list of laps.
+        mLaps = new LinkedList<Long>();
     }
 
     @Override
@@ -46,5 +60,42 @@ public class StopWatchActivity extends AppCompatActivity implements
     public void handleStopWatchAction(ACTIONS action) {
         // Allows the StopWatchActionsFragment to inform the StopWatchActivity class about a user
         // action on the supported StopWatchActions.
+        switch (action) {
+            case Start:
+                break;
+            case Stop:
+                break;
+            case Lap:
+                break;
+            case Reset:
+                break;
+        }
+    }
+
+    @Override
+    public void tickEvent(long milliSecondsElapsed) {
+        Long lastLapTime = 0L;
+        String totalTimeDisplay = null, lapTimeDisplay = null;
+
+        if (mLaps.size() > 1) {
+            lastLapTime = mLaps.get(1);
+        }
+
+        totalTimeDisplay = StopWatch.buildTimeStamp(milliSecondsElapsed);
+        lapTimeDisplay = StopWatch.buildTimeStamp(milliSecondsElapsed - lastLapTime);
+        mLaps.set(0, milliSecondsElapsed);
+
+        // Inform the fragments to update their times.
+        ElapsedTimeFragment elapsedTimeFragment = (ElapsedTimeFragment) getSupportFragmentManager()
+                .findFragmentById(mBinding.rlElapsedTime.getId());
+
+        if (elapsedTimeFragment != null) {
+            elapsedTimeFragment.updateElapsedTime(totalTimeDisplay);
+        }
+        else {
+            throw new java.lang.UnsupportedOperationException(
+                    "The elapsed time fragment does not exist and recieved a tick event."
+            );
+        }
     }
 }
