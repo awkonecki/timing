@@ -79,33 +79,64 @@ public class StopWatchActionsFragment extends Fragment {
 
         getString(R.string.fab_action_start);
 
-        // Set the FABs to their correct context based off of the current UI state.
-        switch(mStopWatchActionState) {
-            case PLAYING:
-                mBinding.tvResetLap.setText(getString(R.string.reset));
-                mBinding.tvStartStop.setText(getString(R.string.start));
-                break;
-            case STOPPED:
-                mBinding.tvResetLap.setText(getString(R.string.lap));
-                mBinding.tvStartStop.setText(getString(R.string.stop));
-                break;
-        }
+        // Set the current selection of the FABs.
+        setFABText();
 
         // Setup callbacks for the FABs.
         mBinding.fabResetLap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                switch(mStopWatchActionState) {
+                    case PLAYING:
+                        // Lap is available - no state transition needs to occur.
+                        mInterface.handleStopWatchAction(ACTIONS.Lap);
+                        break;
+                    case STOPPED:
+                        // Reset is available - remain in the stopped state.
+                        mInterface.handleStopWatchAction(ACTIONS.Reset);
+                        break;
+                }
             }
         });
 
         mBinding.fabStartStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                switch(mStopWatchActionState) {
+                    case PLAYING:
+                        // Stop is available - transition to stopped.
+                        mInterface.handleStopWatchAction(ACTIONS.Stop);
+                        // Update state
+                        mStopWatchActionState = STATE.STOPPED;
+                        // Update UI
+                        setFABText();
+                        break;
+                    case STOPPED:
+                        // Start is available - transition to playing.
+                        mInterface.handleStopWatchAction(ACTIONS.Start);
+                        // Update state
+                        mStopWatchActionState = STATE.PLAYING;
+                        // Update UI
+                        setFABText();
+                        break;
+                }
             }
         });
 
         return mBinding.getRoot();
+    }
+
+    private void setFABText() {
+        // Set the FABs to their correct context based off of the current UI state.
+        switch(mStopWatchActionState) {
+            case PLAYING:
+                mBinding.tvResetLap.setText(getString(R.string.lap));
+                mBinding.tvStartStop.setText(getString(R.string.stop));
+                break;
+            case STOPPED:
+                mBinding.tvResetLap.setText(getString(R.string.reset));
+                mBinding.tvStartStop.setText(getString(R.string.start));
+                break;
+        }
     }
 }
