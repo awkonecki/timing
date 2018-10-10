@@ -12,8 +12,10 @@ import com.nebo.timing.databinding.ActivityStopwatchBinding;
 import com.nebo.timing.ui.ElapsedTimeFragment;
 import com.nebo.timing.ui.LapTimesFragment;
 import com.nebo.timing.ui.StopWatchActionsFragment;
+import com.nebo.timing.ui.StopWatchActionsFragment.ACTIONS;
 
-public class StopWatchActivity extends AppCompatActivity {
+public class StopWatchActivity extends AppCompatActivity implements
+        StopWatchActionsFragment.StopWatchActions {
     ActivityStopwatchBinding mBinding = null;
 
     @Override
@@ -38,5 +40,11 @@ public class StopWatchActivity extends AppCompatActivity {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.menu_stopwatch, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void handleStopWatchAction(ACTIONS action) {
+        // Allows the StopWatchActionsFragment to inform the StopWatchActivity class about a user
+        // action on the supported StopWatchActions.
     }
 }
