@@ -16,36 +16,32 @@ import com.nebo.timing.databinding.FragmentStopwatchActionsBinding;
 public class StopWatchActionsFragment extends Fragment {
     private FragmentStopwatchActionsBinding mBinding = null;
     private StopWatchActions mInterface = null;
-    private STATE stopWatchActionState = STATE.STOPED;
+    private STATE mStopWatchActionState = STATE.STOPPED;
 
     private enum STATE {
         PLAYING,
-        STOPED
+        STOPPED
     }
 
     public enum ACTIONS {
         Start {
-            @Override
-            public String toString() {
-                return "Start";
+            public String toStringFromContext(Context context) {
+                return  context.getString(R.string.fab_action_start);
             }
         },
         Stop {
-            @Override
-            public String toString() {
-                return "Stop";
+            public String toStringFromContext(Context context) {
+                return  context.getString(R.string.fab_action_stop);
             }
         },
         Lap {
-            @Override
-            public String toString() {
-                return "Lap";
+            public String toStringFromContext(Context context) {
+                return  context.getString(R.string.fab_action_lap);
             }
         },
         Reset {
-            @Override
-            public String toString() {
-                return "Reset";
+            public String toStringFromContext(Context context) {
+                return  context.getString(R.string.fab_action_reset);
             }
         }
     }
@@ -80,6 +76,36 @@ public class StopWatchActionsFragment extends Fragment {
                 R.layout.fragment_stopwatch_actions,
                 container,
                 false);
+
+        getString(R.string.fab_action_start);
+
+        // Set the FABs to their correct context based off of the current UI state.
+        switch(mStopWatchActionState) {
+            case PLAYING:
+                mBinding.tvResetLap.setText(getString(R.string.reset));
+                mBinding.tvStartStop.setText(getString(R.string.start));
+                break;
+            case STOPPED:
+                mBinding.tvResetLap.setText(getString(R.string.lap));
+                mBinding.tvStartStop.setText(getString(R.string.stop));
+                break;
+        }
+
+        // Setup callbacks for the FABs.
+        mBinding.fabResetLap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        mBinding.fabStartStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
         return mBinding.getRoot();
     }
 }

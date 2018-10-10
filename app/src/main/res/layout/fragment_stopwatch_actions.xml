@@ -5,23 +5,49 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" >
 
-    <android.support.constraint.ConstraintLayout
+    <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_reset_lap"
+            android:text="@string/reset"
             android:layout_margin="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"/>
+            android:layout_gravity="start|top"
+            app:backgroundTint="@color/colorAccent"/>
+
+        <TextView
+            android:id="@+id/tv_reset_lap"
+            android:text="@string/reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="14sp"
+            android:elevation="6dp"
+            app:layout_anchor="@id/fab_reset_lap"
+            app:layout_anchorGravity="center"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_start_stop"
+            android:text="@string/start"
             android:layout_margin="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:layout_gravity="end|top"
+            app:backgroundTint="@color/colorAccent"/>
 
-    </android.support.constraint.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_start_stop"
+            android:text="@string/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="14sp"
+            android:elevation="6dp"
+            app:layout_anchor="@id/fab_start_stop"
+            app:layout_anchorGravity="center"/>
+
+    </android.support.design.widget.CoordinatorLayout>
 </layout>

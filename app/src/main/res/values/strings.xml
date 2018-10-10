@@ -2,4 +2,12 @@
     <string name="app_name">Timing</string>
     <string name="firebase_database_timed_activities" translatable="false">timed-activities</string>
     <string name="default_time" translatable="false">00:00:00.000</string>
+    <string name="start" translatable="true">Start</string>
+    <string name="stop" translatable="true">Stop</string>
+    <string name="lap" translatable="true">Lap</string>
+    <string name="reset" translatable="true">Reset</string>
+    <string name="fab_action_start" translatable="false">Start</string>
+    <string name="fab_action_stop" translatable="false">Stop</string>
+    <string name="fab_action_lap" translatable="false">Lap</string>
+    <string name="fab_action_reset" translatable="false">Reset</string>
 </resources>
