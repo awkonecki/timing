@@ -26,6 +26,25 @@ public class StopWatchActivity extends AppCompatActivity implements
     private StopWatch mStopWatch = null;
     private List<Long> mLaps = null;
 
+    private void createLap() {
+        LapTimesFragment lapTimesFragment = (LapTimesFragment) getSupportFragmentManager()
+                .findFragmentById(mBinding.rlLapTimes.getId());
+
+        // Add a new lap that starts at 0 to the list of laps.
+        mLaps.add(0, 0L);
+
+        if (lapTimesFragment != null) {
+            if (!mLaps.isEmpty()) {
+                lapTimesFragment.newLapTime(StopWatch.buildTimeStamp(mLaps.get(0)));
+            }
+        }
+        else {
+            throw new java.lang.UnsupportedOperationException(
+                    "The lap time fragment does not exist and recieved a create lap event."
+            );
+        }
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +87,7 @@ public class StopWatchActivity extends AppCompatActivity implements
                 mStopWatch.pause();
                 break;
             case Lap:
+                createLap();
                 break;
             case Reset:
                 mStopWatch.stop();

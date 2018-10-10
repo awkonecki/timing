@@ -121,4 +121,10 @@ public class LapTimesFragment extends Fragment {
             ((LapAdapter) mBinding.rvLapTimes.getAdapter()).clearLapTimes();
         }
     }
+
+    public void newLapTime(String lapTimeDisplay) {
+        if (mBinding != null) {
+            ((LapAdapter) mBinding.rvLapTimes.getAdapter()).addNewLapTime(lapTimeDisplay);
+        }
+    }
 }
