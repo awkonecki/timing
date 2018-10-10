@@ -62,12 +62,17 @@ public class StopWatchActivity extends AppCompatActivity implements
         // action on the supported StopWatchActions.
         switch (action) {
             case Start:
+                mStopWatch.play();
                 break;
             case Stop:
+                mStopWatch.pause();
                 break;
             case Lap:
                 break;
             case Reset:
+                mStopWatch.stop();
+                mLaps.clear();
+                tickEvent(0);
                 break;
         }
     }
@@ -79,6 +84,9 @@ public class StopWatchActivity extends AppCompatActivity implements
 
         if (mLaps.size() > 1) {
             lastLapTime = mLaps.get(1);
+        }
+        else if (mLaps.size() == 0) {
+            mLaps.add(0L);
         }
 
         totalTimeDisplay = StopWatch.buildTimeStamp(milliSecondsElapsed);
