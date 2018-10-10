@@ -90,12 +90,16 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
 
         totalTimeDisplay = StopWatch.buildTimeStamp(milliSecondsElapsed);
-        lapTimeDisplay = StopWatch.buildTimeStamp(milliSecondsElapsed - lastLapTime);
+        lapTimeDisplay = StopWatch.buildTimeStamp(
+                milliSecondsElapsed - lastLapTime);
         mLaps.set(0, milliSecondsElapsed);
 
         // Inform the fragments to update their times.
         ElapsedTimeFragment elapsedTimeFragment = (ElapsedTimeFragment) getSupportFragmentManager()
                 .findFragmentById(mBinding.rlElapsedTime.getId());
+
+        LapTimesFragment lapTimesFragment = (LapTimesFragment) getSupportFragmentManager()
+                .findFragmentById(mBinding.rlLapTimes.getId());
 
         if (elapsedTimeFragment != null) {
             elapsedTimeFragment.updateElapsedTime(totalTimeDisplay);
@@ -103,6 +107,20 @@ public class StopWatchActivity extends AppCompatActivity implements
         else {
             throw new java.lang.UnsupportedOperationException(
                     "The elapsed time fragment does not exist and recieved a tick event."
+            );
+        }
+
+        if (lapTimesFragment != null) {
+            if (milliSecondsElapsed == 0) {
+                lapTimesFragment.resetLapTimes();
+            }
+            else {
+                lapTimesFragment.updateLapTime(lapTimeDisplay);
+            }
+        }
+        else {
+            throw new java.lang.UnsupportedOperationException(
+                    "The lap time fragment does not exist and recieved a tick event."
             );
         }
     }
