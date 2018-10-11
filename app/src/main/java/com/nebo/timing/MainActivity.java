@@ -35,6 +35,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    /*
     private String mCurrentUser = null;
 
     private final String TAG = "MainActivity";
@@ -200,4 +201,5 @@ public class MainActivity extends AppCompatActivity {
             mAuthStateListener = null;
         }
     }
+    */
 }

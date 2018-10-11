@@ -1,19 +1,13 @@
 package com.nebo.timing;
 
-public class TimedActivity {
-    private String mActivityName;
+import android.os.Bundle;
+import android.os.PersistableBundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 
-    public TimedActivity() {}
-
-    public TimedActivity(String name) {
-        this.mActivityName = name;
-    }
-
-    public void setActivityName(String name) {
-        this.mActivityName = name;
-    }
-
-    public String getActivityName() {
-        return this.mActivityName;
+public class TimedActivity extends AppCompatActivity {
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 }
