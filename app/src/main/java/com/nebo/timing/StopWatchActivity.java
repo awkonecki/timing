@@ -46,7 +46,7 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
     }
 
-    private void initializeFragments(long baseTime) {
+    private void initializeFragments(long baseTime, List<String> times) {
         // Inform the fragments to update their times.
         ElapsedTimeFragment elapsedTimeFragment = (ElapsedTimeFragment) getSupportFragmentManager()
                 .findFragmentById(mBinding.rlElapsedTime.getId());
@@ -60,7 +60,16 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
         else {
             throw new java.lang.UnsupportedOperationException(
-                    "The elapsed time fragment does not exist and recieved a tick event."
+                    "The elapsed time fragment does not exist and trying to initialize."
+            );
+        }
+
+        if (lapTimesFragment != null) {
+            lapTimesFragment.initializeLaps(times);
+        }
+        else {
+            throw new java.lang.UnsupportedOperationException(
+                    "The lap time fragment does not exist and trying to initialize."
             );
         }
     }
@@ -90,6 +99,7 @@ public class StopWatchActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
         long baseTime = 0L;
+        List<String> timeStrings = new LinkedList<String>();
 
         // Create the list of laps.
         mLaps = new LinkedList<Long>();
@@ -102,8 +112,8 @@ public class StopWatchActivity extends AppCompatActivity implements
                 for (long time : times) {
                     baseTime += time;
                     mLaps.add(time);
+                    timeStrings.add(StopWatch.buildTimeStamp(time));
                 }
-
             }
         }
         else {
@@ -127,8 +137,7 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
         else {
             // Populate the fragments associated with the StopWatchActivity.
-            Log.d("onCreate", "loading fragments with " + Long.toString(baseTime));
-            initializeFragments(baseTime);
+            initializeFragments(baseTime, timeStrings);
         }
     }
 

@@ -220,6 +220,7 @@ public class StopWatch {
             case STOPPED:
                 mMilliSeconds = 0L;
                 prevTime = -1;
+                mBaseMilliSeconds = 0L;
                 break;
             default:
                 throw new java.lang.IllegalArgumentException(

@@ -20,11 +20,20 @@ import java.util.List;
 
 public class LapTimesFragment extends Fragment {
     private FragmentLapTimesBinding mBinding = null;
+    private LapAdapter mLapAdapter = new LapAdapter();
 
     private class LapAdapter extends RecyclerView.Adapter<LapTimesFragment.LapAdapter.LapView> {
         private LapElementBinding mBinding = null;
 
         List<String> mDisplayTimes = new LinkedList<String>();
+
+        public LapAdapter() {}
+
+        public LapAdapter(List<String> displayTimes) {
+            for (String time : displayTimes) {
+                mDisplayTimes.add(time);
+            }
+        }
 
         @NonNull
         @Override
@@ -105,7 +114,7 @@ public class LapTimesFragment extends Fragment {
                         LinearLayoutManager.VERTICAL,
                         false));
         mBinding.rvLapTimes.setHasFixedSize(true);
-        mBinding.rvLapTimes.setAdapter(new LapAdapter());
+        mBinding.rvLapTimes.setAdapter(mLapAdapter);
 
         return mBinding.getRoot();
     }
@@ -125,6 +134,18 @@ public class LapTimesFragment extends Fragment {
     public void newLapTime(String lapTimeDisplay) {
         if (mBinding != null) {
             ((LapAdapter) mBinding.rvLapTimes.getAdapter()).addNewLapTime(lapTimeDisplay);
+        }
+    }
+
+    public void initializeLaps(List<String> times) {
+        if (mBinding == null) {
+            mLapAdapter = new LapAdapter(times);
+        }
+        else {
+            ((LapAdapter) mBinding.rvLapTimes.getAdapter()).clearLapTimes();
+            for (String time : times) {
+                updateLapTime(time);
+            }
         }
     }
 }
