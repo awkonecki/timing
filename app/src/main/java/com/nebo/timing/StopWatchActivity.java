@@ -100,6 +100,7 @@ public class StopWatchActivity extends AppCompatActivity implements
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
         long baseTime = 0L;
         List<String> timeStrings = new LinkedList<String>();
+        int stopWatchState = StopWatch.sSTOP_STATE_VALUE;
 
         // Create the list of laps.
         mLaps = new LinkedList<Long>();
@@ -115,6 +116,9 @@ public class StopWatchActivity extends AppCompatActivity implements
                     timeStrings.add(StopWatch.buildTimeStamp(time));
                 }
             }
+
+            stopWatchState = savedInstanceState.getInt(getString(R.string.key_stopwatch_state),
+                    StopWatch.sSTOP_STATE_VALUE);
         }
         else {
             // Check intent data
@@ -138,6 +142,11 @@ public class StopWatchActivity extends AppCompatActivity implements
         else {
             // Populate the fragments associated with the StopWatchActivity.
             initializeFragments(baseTime, timeStrings);
+
+            // Check the state
+            if (stopWatchState == StopWatch.sPLAY_STATE_VALUE) {
+                mStopWatch.play();
+            }
         }
     }
 

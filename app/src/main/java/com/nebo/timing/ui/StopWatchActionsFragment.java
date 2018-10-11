@@ -18,28 +18,40 @@ public class StopWatchActionsFragment extends Fragment {
     private StopWatchActions mInterface = null;
     private STATE mStopWatchActionState = STATE.STOPPED;
 
+    private static final int sSTART_STATE = 0;
+    private static final int sSTOPPED_STATE = 1;
+
     private enum STATE {
-        PLAYING,
-        STOPPED
+        PLAYING (sSTART_STATE),
+        STOPPED (sSTOPPED_STATE);
+
+        private int mStateValue = sSTOPPED_STATE;
+        STATE(int value) {
+            mStateValue = value;
+        }
+
+        public int getStateValue() {
+            return mStateValue;
+        }
     }
 
     public enum ACTIONS {
-        Start {
+        Start () {
             public String toStringFromContext(Context context) {
                 return  context.getString(R.string.fab_action_start);
             }
         },
-        Stop {
+        Stop () {
             public String toStringFromContext(Context context) {
                 return  context.getString(R.string.fab_action_stop);
             }
         },
-        Lap {
+        Lap ( ){
             public String toStringFromContext(Context context) {
                 return  context.getString(R.string.fab_action_lap);
             }
         },
-        Reset {
+        Reset () {
             public String toStringFromContext(Context context) {
                 return  context.getString(R.string.fab_action_reset);
             }
@@ -77,7 +89,18 @@ public class StopWatchActionsFragment extends Fragment {
                 container,
                 false);
 
-        getString(R.string.fab_action_start);
+        if (savedInstanceState != null)
+        {
+             switch (savedInstanceState.getInt(
+                    getString(R.string.key_stopwatch_actions_state), sSTOPPED_STATE)) {
+                 case sSTART_STATE:
+                     mStopWatchActionState = STATE.PLAYING;
+                     break;
+                 case sSTOPPED_STATE:
+                     mStopWatchActionState = STATE.STOPPED;
+                     break;
+             }
+        }
 
         // Set the current selection of the FABs.
         setFABText();
@@ -138,5 +161,12 @@ public class StopWatchActionsFragment extends Fragment {
                 mBinding.tvStartStop.setText(getString(R.string.start));
                 break;
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(getString(R.string.key_stopwatch_actions_state),
+                mStopWatchActionState.getStateValue());
     }
 }

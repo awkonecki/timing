@@ -12,4 +12,5 @@
     <string name="fab_action_reset" translatable="false">Reset</string>
     <string name="key_lap_times" translatable="false">lap times</string>
     <string name="key_stopwatch_state" translatable="false">stopwatch state</string>
+    <string name="key_stopwatch_actions_state" translatable="false">stopwatch actions state</string>
 </resources>
