@@ -10,4 +10,6 @@
     <string name="fab_action_stop" translatable="false">Stop</string>
     <string name="fab_action_lap" translatable="false">Lap</string>
     <string name="fab_action_reset" translatable="false">Reset</string>
+    <string name="key_lap_times" translatable="false">lap times</string>
+    <string name="key_stopwatch_state" translatable="false">stopwatch state</string>
 </resources>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 
@@ -46,26 +47,70 @@ public class StopWatchActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        long [] times = new long [mLaps.size()];
+
+        int index = 0;
+        for (long time : mLaps) {
+            times[index] = time;
+            index++;
+        }
+
+        if (mStopWatch != null) {
+            outState.putInt(
+                    getString(R.string.key_stopwatch_state),
+                    mStopWatch.getState().getStateValue());
+            outState.putLongArray(getString(R.string.key_lap_times), times);
+            mStopWatch.stop();
+        }
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
-
-        // Population of the activity fragments.
-        LapTimesFragment lapTimesFragment = new LapTimesFragment();
-        ElapsedTimeFragment elapsedTimeFragment = new ElapsedTimeFragment();
-        StopWatchActionsFragment stopWatchActionsFragment = new StopWatchActionsFragment();
-
-        getSupportFragmentManager().beginTransaction()
-                .add(mBinding.rlElapsedTime.getId(), elapsedTimeFragment)
-                .add(mBinding.rlLapTimes.getId(), lapTimesFragment)
-                .add(mBinding.rlStopwatchActions.getId(), stopWatchActionsFragment)
-                .commit();
-
-        // Create the stopwatch object.
-        mStopWatch = new StopWatch(this);
+        long baseTime = 0L;
 
         // Create the list of laps.
         mLaps = new LinkedList<Long>();
+
+        if (savedInstanceState != null && !savedInstanceState.isEmpty()) {
+            // Obtain instance state data
+            long [] times = savedInstanceState.getLongArray(getString(R.string.key_lap_times));
+
+            if (times != null && times.length > 0) {
+                for (long time : times) {
+                    baseTime += time;
+                    mLaps.add(time);
+                }
+
+            }
+        }
+        else {
+            // Check intent data
+        }
+
+        // Population of the activity fragments.
+        if (savedInstanceState == null) {
+            LapTimesFragment lapTimesFragment = new LapTimesFragment();
+            ElapsedTimeFragment elapsedTimeFragment = new ElapsedTimeFragment();
+            StopWatchActionsFragment stopWatchActionsFragment = new StopWatchActionsFragment();
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(mBinding.rlElapsedTime.getId(), elapsedTimeFragment)
+                    .add(mBinding.rlLapTimes.getId(), lapTimesFragment)
+                    .add(mBinding.rlStopwatchActions.getId(), stopWatchActionsFragment)
+                    .commit();
+        }
+        else {
+            // Populate the fragments associated with the StopWatchActivity.
+        }
+
+        // Create the stopwatch object.
+        mStopWatch = new StopWatch(this, StopWatch.sDEFAULT_TIME_INTERVAL, baseTime);
+
+        Log.d("onCreate", Long.toString(baseTime));
     }
 
     @Override

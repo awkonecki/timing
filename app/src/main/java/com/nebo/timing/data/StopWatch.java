@@ -54,30 +54,42 @@ public class StopWatch {
     //**********************************************************************************************
 
     public final static long sDEFAULT_TIME_INTERVAL = 100L;
+    public final static int sPLAY_STATE_VALUE = 0;
+    public final static int sPAUSE_STATE_VALUE = 1;
+    public final static int sSTOP_STATE_VALUE = 2;
 
     /**
      * @enum StopWatchState
      * @brief Enumerate the supported states, and description string via the toString method.
      */
     public enum StopWatchState {
-        PLAYING {
+         PLAYING (sPLAY_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Playing";
             }
-        },
-        PAUSED {
+            },
+         PAUSED (sPAUSE_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Paused";
             }
-        },
-        STOPPED {
+         },
+         STOPPED (sSTOP_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Stopped";
             }
-        }
+         };
+
+         private final int number;
+         StopWatchState(int number) {
+             this.number = number;
+         }
+
+         public int getStateValue() {
+            return number;
+         }
     }
 
     /**
