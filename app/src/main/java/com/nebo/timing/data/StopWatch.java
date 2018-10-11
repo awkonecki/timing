@@ -54,30 +54,99 @@ public class StopWatch {
     //**********************************************************************************************
 
     public final static long sDEFAULT_TIME_INTERVAL = 100L;
+    public final static int sPLAY_STATE_VALUE = 0;
+    public final static int sPAUSE_STATE_VALUE = 1;
+    public final static int sSTOP_STATE_VALUE = 2;
 
     /**
      * @enum StopWatchState
      * @brief Enumerate the supported states, and description string via the toString method.
      */
     public enum StopWatchState {
-        PLAYING {
+         PLAYING (sPLAY_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Playing";
             }
-        },
-        PAUSED {
+            },
+         PAUSED (sPAUSE_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Paused";
             }
-        },
-        STOPPED {
+         },
+         STOPPED (sSTOP_STATE_VALUE) {
             @Override
             public String toString() {
                 return "Stopped";
             }
+         };
+
+         private final int number;
+         StopWatchState(int number) {
+             this.number = number;
+         }
+
+         public int getStateValue() {
+            return number;
+         }
+    }
+
+    /**
+     * @func buildTimeStamp
+     * @brief Method responsible for building the time stamp w.r.t the defined number of passed
+     *        milli-seconds.
+     * @param milliSecondsElapsed - total number of milli-seconds that has elapased since the start
+     *                              of a stopwatch instance.
+     * @return string that represents the total break down of seconds minutes and hours.
+     */
+    public static String buildTimeStamp(long milliSecondsElapsed) {
+        long totalMilli = milliSecondsElapsed % 1000;
+        long totalSeconds = milliSecondsElapsed / 1000L;
+
+        long totalHours = totalSeconds / 3600L;
+        long totalMinutes = (totalSeconds - (totalHours * 3600L)) / 60L;
+        totalSeconds = (totalSeconds - (totalHours * 3600L) - (totalMinutes * 60L));
+
+        StringBuilder sb = new StringBuilder();
+
+        if (totalHours == 0) {
+            sb.append("00:");
         }
+        else if (totalHours < 10) {
+            sb.append("0").append(Long.toString(totalHours)).append(':');
+        }
+        else {
+            sb.append(Long.toString(totalHours)).append(':');
+        }
+
+        if (totalMinutes > 59) {
+            throw new java.lang.IllegalArgumentException(
+                    "Total Number of minutes must be less than 60 " + Long.toString(totalMinutes)
+            );
+        }
+        else if (totalMinutes < 10) {
+            sb.append('0').append(Long.toString(totalMinutes)).append(':');
+        }
+        else {
+            sb.append(Long.toString(totalMinutes)).append(':');
+        }
+
+        if (totalSeconds > 59) {
+            throw new java.lang.IllegalArgumentException(
+                    "Total Number of seconds must be less than 60 " + Long.toString(totalSeconds)
+            );
+        }
+        else if (totalSeconds < 10) {
+            sb.append('0').append(Long.toString(totalSeconds));
+        }
+        else {
+            sb.append(Long.toString(totalSeconds));
+        }
+
+        sb.append('.').append(Long.toString(totalMilli));
+
+        return sb.toString();
     }
 
     /**
@@ -151,6 +220,7 @@ public class StopWatch {
             case STOPPED:
                 mMilliSeconds = 0L;
                 prevTime = -1;
+                mBaseMilliSeconds = 0L;
                 break;
             default:
                 throw new java.lang.IllegalArgumentException(
