@@ -42,7 +42,9 @@ public class StopWatch {
             }
 
             prevTime = time;
-            mCallback.tickEvent(mMilliSeconds);
+            if (mCallback != null) {
+                mCallback.tickEvent(mMilliSeconds);
+            }
         }
 
         @Override
@@ -90,6 +92,27 @@ public class StopWatch {
          public int getStateValue() {
             return number;
          }
+    }
+
+    /**
+     * @func unRegisterCallback
+     * @brief when the controlling element exists from its life-cycle want to make sure that before
+     *        it does that the callback is set to null such that a delivery is not attempted on a
+     *        null process definition.
+     */
+    public void unRegisterCallback() {
+        mCallback = null;
+    }
+
+    /**
+     * @funct registerCallback
+     * @brief allows for the owner to re-establish the callback that is responsible for handling
+     *        tick events.
+     * @param callback - interface defined class that is responsible for defining where onTick
+     *                   callbacks are sent.
+     */
+    public void registerCallback(StopWatchTickEvents callback) {
+        mCallback = callback;
     }
 
     /**
