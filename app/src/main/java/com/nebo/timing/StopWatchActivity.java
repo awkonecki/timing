@@ -75,8 +75,42 @@ public class StopWatchActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (mStopWatch != null) {
+            mStopWatch.unRegisterCallback();
+        }
+        Log.d("StopWatchActivity", "onPause");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mStopWatch != null) {
+            mStopWatch.registerCallback(this);
+        }
+        Log.d("StopWatchActivity", "onResume");
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("StopWatchActivity", "onStop");
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("StopWatchActivity", "onDestroy");
+
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Log.d("StopWatchActivity", "onSaveInstanceState");
         long [] times = new long [mLaps.size()];
 
         int index = 0;
@@ -90,13 +124,15 @@ public class StopWatchActivity extends AppCompatActivity implements
                     getString(R.string.key_stopwatch_state),
                     mStopWatch.getState().getStateValue());
             outState.putLongArray(getString(R.string.key_lap_times), times);
-            mStopWatch.stop();
         }
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d("StopWatchActivity", "onCreate");
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
         long baseTime = 0L;
         List<String> timeStrings = new LinkedList<String>();
@@ -110,10 +146,17 @@ public class StopWatchActivity extends AppCompatActivity implements
             long [] times = savedInstanceState.getLongArray(getString(R.string.key_lap_times));
 
             if (times != null && times.length > 0) {
+                baseTime = times[0];
                 for (long time : times) {
-                    baseTime += time;
                     mLaps.add(time);
                     timeStrings.add(StopWatch.buildTimeStamp(time));
+                    // Log.d("onCreate", "time found is " + Long.toString(time));
+                }
+
+                // need to account for the first lap time.
+                if (mLaps.size() > 1) {
+                    timeStrings.set(0,
+                            StopWatch.buildTimeStamp(baseTime - mLaps.get(1)));
                 }
             }
 
@@ -181,6 +224,8 @@ public class StopWatchActivity extends AppCompatActivity implements
 
     @Override
     public void tickEvent(long milliSecondsElapsed) {
+        Log.d("StopWatchActivity", "tickEvent");
+
         Long lastLapTime = 0L;
         String totalTimeDisplay = null, lapTimeDisplay = null;
 
