@@ -15,6 +15,7 @@ import com.nebo.timing.databinding.FragmentElapsedTimeBinding;
 
 public class ElapsedTimeFragment extends Fragment {
     private FragmentElapsedTimeBinding mBinding = null;
+    private String mStartingTime = StopWatch.buildTimeStamp(0L);
 
     @Nullable
     @Override
@@ -30,7 +31,7 @@ public class ElapsedTimeFragment extends Fragment {
                 false);
 
         // Set the tv to the default
-        mBinding.tvElapsedTime.setText(StopWatch.buildTimeStamp(0L));
+        mBinding.tvElapsedTime.setText(mStartingTime);
 
         return mBinding.getRoot();
     }
@@ -38,6 +39,9 @@ public class ElapsedTimeFragment extends Fragment {
     public void updateElapsedTime(String time) {
         if (mBinding != null) {
             mBinding.tvElapsedTime.setText(time);
+        }
+        else {
+            mStartingTime = time;
         }
     }
 }

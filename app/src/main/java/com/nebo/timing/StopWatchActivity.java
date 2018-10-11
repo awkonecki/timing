@@ -46,6 +46,25 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
     }
 
+    private void initializeFragments(long baseTime) {
+        // Inform the fragments to update their times.
+        ElapsedTimeFragment elapsedTimeFragment = (ElapsedTimeFragment) getSupportFragmentManager()
+                .findFragmentById(mBinding.rlElapsedTime.getId());
+
+        LapTimesFragment lapTimesFragment = (LapTimesFragment) getSupportFragmentManager()
+                .findFragmentById(mBinding.rlLapTimes.getId());
+
+        if (elapsedTimeFragment != null) {
+            Log.d("initializeFragments", "should be updating");
+            elapsedTimeFragment.updateElapsedTime(StopWatch.buildTimeStamp(baseTime));
+        }
+        else {
+            throw new java.lang.UnsupportedOperationException(
+                    "The elapsed time fragment does not exist and recieved a tick event."
+            );
+        }
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -91,6 +110,9 @@ public class StopWatchActivity extends AppCompatActivity implements
             // Check intent data
         }
 
+        // Create the stopwatch object.
+        mStopWatch = new StopWatch(this, StopWatch.sDEFAULT_TIME_INTERVAL, baseTime);
+
         // Population of the activity fragments.
         if (savedInstanceState == null) {
             LapTimesFragment lapTimesFragment = new LapTimesFragment();
@@ -105,12 +127,9 @@ public class StopWatchActivity extends AppCompatActivity implements
         }
         else {
             // Populate the fragments associated with the StopWatchActivity.
+            Log.d("onCreate", "loading fragments with " + Long.toString(baseTime));
+            initializeFragments(baseTime);
         }
-
-        // Create the stopwatch object.
-        mStopWatch = new StopWatch(this, StopWatch.sDEFAULT_TIME_INTERVAL, baseTime);
-
-        Log.d("onCreate", Long.toString(baseTime));
     }
 
     @Override
