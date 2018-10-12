@@ -10,8 +10,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimedActivityDetailBinding;
+import com.nebo.timing.databinding.ActivitySessionElementBinding;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TimedActivityDetailActivity extends AppCompatActivity {
     private ActivityTimedActivityDetailBinding mBinding = null;
@@ -19,26 +25,44 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
     private class ActivitySessionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+        List<ActivitySession> sessionList = new ArrayList<>();
+
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return null;
+            ActivitySessionElementBinding binding = DataBindingUtil.inflate(
+                    getLayoutInflater(),
+                    R.layout.activity_session_element,
+                    parent,
+                    false);
+            return new ActivitySessionViewHolder(binding);
         }
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-
+            if (position >= 0) {
+                ((ActivitySessionViewHolder) (holder)).bind(sessionList.get(position));
+            }
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return sessionList.size();
         }
 
         private class ActivitySessionViewHolder extends RecyclerView.ViewHolder {
 
-            public ActivitySessionViewHolder(View itemView) {
-                super(itemView);
+            private ActivitySessionElementBinding mBinding = null;
+
+            public ActivitySessionViewHolder(ActivitySessionElementBinding binding) {
+                super(binding.getRoot());
+                mBinding = binding;
+            }
+
+            public void bind(ActivitySession session) {
+                mBinding.tvActivitySessionDate.setText("Date");
+                mBinding.tvActivitySessionName.setText(session.getName());
+                mBinding.tvLabels.setText("Labels");
             }
         }
     }

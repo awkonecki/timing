@@ -5,6 +5,7 @@ import java.util.HashSet;
 public class ActivitySession {
     private String name = null;
     private long sessionStartDate = 0L;
+    private long totalTime = 0L;
     private long [] sessionLapTimes;
     private HashSet<String> labels = new HashSet<String>();
 
