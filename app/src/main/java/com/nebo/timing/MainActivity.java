@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         mDatabaseReference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Log.d(TAG, "onChildAdded " + dataSnapshot.getValue(TimedActivity.class).getActivityName());
+                Log.d(TAG, "onChildAdded " + dataSnapshot.getValue(TimedActivityDetailActivity.class).getActivityName());
 
                 // Will need to do something with the data.
             }
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                TimedActivity activity = new TimedActivity("workout");
+                TimedActivityDetailActivity activity = new TimedActivityDetailActivity("workout");
                 mDatabaseReference.push().setValue(activity);
             }
         });
