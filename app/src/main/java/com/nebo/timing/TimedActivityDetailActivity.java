@@ -11,6 +11,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.google.common.base.Stopwatch;
 import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.StopWatch;
@@ -110,6 +117,35 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     }
 
     private void buildGraph() {
+        LineChart chart = (LineChart) findViewById(R.id.chart);
 
+        BarEntry stackEntry1 = new BarEntry(0f, new float [] {2.31f,4.51f,34.5f});
+        BarEntry stackEntry2 = new BarEntry(1f, new float [] {4.41f,13.27f,22.5f,13.6f});
+
+
+        List<BarEntry> entries = new ArrayList<>();
+        entries.add(stackEntry1);
+        entries.add(stackEntry2);
+
+        BarDataSet dataSet = new BarDataSet(entries,"data");
+
+        //dataSet.setColors(R.color.colorAccent, R.color.colorPrimary);
+        //dataSet.addColor(R.color.colorAccent);
+        //dataSet.addColor(R.color.colorPrimary);
+        //dataSet.color
+
+        BarData data = new BarData(dataSet);
+
+
+        float groupSpace = 0.06f;
+        float barSpace = 0.02f; // x2 dataset
+        float barWidth = 0.9f; // x2 dataset
+        // (0.02 + 0.45) * 2 + 0.06 = 1.00 -> interval per "group"
+
+        data.setBarWidth(barWidth);
+
+        mBinding.bcChart.setFitBars(true);
+        mBinding.bcChart.setData(data);
+        mBinding.bcChart.invalidate(); // refresh
     }
 }
