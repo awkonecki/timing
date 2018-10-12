@@ -91,6 +91,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         else {
             // use the intent passed data, assume for now the data is passed in via the intent.
             mTimedActivity = getIntent().getParcelableExtra(getString(R.string.key_timed_activity));
+            mTimedActivity = TimedActivity.getTimedActivity();
         }
 
         // setup the activity's recyclerview widget

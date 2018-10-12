@@ -19,4 +19,17 @@ public class TimedActivity {
     public long getTotalElapsedTime() {
         return totalElapsedTime;
     }
+
+    public static TimedActivity getTimedActivity() {
+        TimedActivity timedActivity = new TimedActivity();
+        timedActivity.totalElapsedTime = 1234567L;
+
+        ActivitySession session1 = new ActivitySession();
+        ActivitySession session2 = new ActivitySession();
+
+        timedActivity.activitySessions.add(session1);
+        timedActivity.activitySessions.add(session2);
+
+        return timedActivity;
+    }
 }
