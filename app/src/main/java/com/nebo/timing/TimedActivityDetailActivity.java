@@ -6,11 +6,14 @@ import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.common.base.Stopwatch;
 import com.nebo.timing.data.ActivitySession;
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimedActivityDetailBinding;
 import com.nebo.timing.databinding.ActivitySessionElementBinding;
@@ -26,6 +29,10 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     private class ActivitySessionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         List<ActivitySession> sessionList = new ArrayList<>();
+
+        public ActivitySessionsAdapter(List<ActivitySession> sessions) {
+            sessionList = new ArrayList<>(sessions);
+        }
 
         @NonNull
         @Override
@@ -86,6 +93,22 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             mTimedActivity = getIntent().getParcelableExtra(getString(R.string.key_timed_activity));
         }
 
+        // setup the activity's recyclerview widget
+        mBinding.rvRecordedSessions.setLayoutManager(new LinearLayoutManager(
+                this, LinearLayoutManager.VERTICAL, false));
+        mBinding.rvRecordedSessions.setHasFixedSize(true);
+        mBinding.rvRecordedSessions.setAdapter(new ActivitySessionsAdapter(
+                mTimedActivity.getActivitySessions()));
+
+        // set the activity name
+        mBinding.tvTotalTimeDisplay.setText(
+                StopWatch.buildTimeStamp(mTimedActivity.getTotalElapsedTime()));
+
+        // Build the graph
+        buildGraph();
+    }
+
+    private void buildGraph() {
 
     }
 }

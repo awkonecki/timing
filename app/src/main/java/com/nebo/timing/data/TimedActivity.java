@@ -11,4 +11,12 @@ public class TimedActivity {
     private HashSet<String> categories = new HashSet<>();
 
     public TimedActivity() {}
+
+    public List<ActivitySession> getActivitySessions() {
+        return new ArrayList<>(activitySessions);
+    }
+
+    public long getTotalElapsedTime() {
+        return totalElapsedTime;
+    }
 }
