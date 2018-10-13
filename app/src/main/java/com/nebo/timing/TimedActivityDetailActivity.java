@@ -99,6 +99,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             // use the instance data
             mTimedActivity = savedInstanceState.getParcelable(
                     getString(R.string.key_timed_activity));
+            mTimedActivity = TimedActivity.getTimedActivity();
         }
         else {
             // use the intent passed data, assume for now the data is passed in via the intent.
@@ -122,8 +123,84 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     }
 
     private void buildGraph() {
-        LineChart chart = (LineChart) findViewById(R.id.chart);
+        List<String> sessionLabels = new ArrayList<>();
+        int maximumLaps = 0, index = 0;
+        List<BarEntry> sessionLapEntries = new ArrayList<>();
 
+        // Setting up the stacked bar chart data.
+        if (mTimedActivity != null && mTimedActivity.getActivitySessions() != null) {
+            for (ActivitySession session : mTimedActivity.getActivitySessions()) {
+                float[] lapTimes = new float[0];
+
+                if (session != null && session.getSessionLapTimes() != null) {
+                    // Need to build the bar entry for each session's time laps.
+                    lapTimes = new float[session.getSessionLapTimes().length];
+
+                    for (int lapIndex = 0; lapIndex < lapTimes.length; lapIndex++) {
+                        // Each lap is the total number of milli-seconds for the lap.
+                        lapTimes[lapIndex] = (float) (session.getSessionLapTimes()[lapIndex] / 1000L);
+                    }
+
+                    // save the detail w.r.t the maximum number of laps
+                    if (lapTimes.length > maximumLaps) {
+                        maximumLaps = lapTimes.length;
+                    }
+
+                    sessionLabels.add(Integer.toString(index));
+                    sessionLapEntries.add(new BarEntry((float) index, lapTimes));
+                    index++;
+                }
+            }
+        }
+
+        // Movement of the data to the correct type.
+        BarDataSet barDataSet = new BarDataSet(sessionLapEntries, "Session Lap Time");
+        barDataSet.setColors(getColors(maximumLaps));
+
+        ArrayList<IBarDataSet> barDataSets = new ArrayList<IBarDataSet>();
+        barDataSets.add(barDataSet);
+
+        BarData barData = new BarData(barDataSets);
+
+        // Adding the data to the chart.
+        barData.setBarWidth(0.95f);
+        mBinding.bcChart.setData(barData);
+
+        // setting the bar chart properties.
+        mBinding.bcChart.setFitBars(true);
+        mBinding.bcChart.setDrawGridBackground(false);
+        mBinding.bcChart.setDrawBarShadow(false);
+        mBinding.bcChart.setDrawValueAboveBar(false);
+        mBinding.bcChart.setTouchEnabled(false);
+        mBinding.bcChart.setPinchZoom(false);
+        mBinding.bcChart.setDoubleTapToZoomEnabled(false);
+
+        mBinding.bcChart.getAxisLeft().setDrawAxisLine(true);
+        mBinding.bcChart.getAxisLeft().setDrawGridLines(false);
+        mBinding.bcChart.getAxisLeft().setDrawLabels(false);
+
+        mBinding.bcChart.getAxisRight().setDrawAxisLine(false);
+        mBinding.bcChart.getAxisRight().setDrawGridLines(false);
+        mBinding.bcChart.getAxisRight().setDrawLabels(false);
+
+        mBinding.bcChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+        mBinding.bcChart.getXAxis().setDrawGridLines(false);
+        mBinding.bcChart.getXAxis().setDrawAxisLine(false);
+        mBinding.bcChart.getXAxis().setGranularity(1f);
+
+        final String [] values = sessionLabels.toArray(new String [sessionLabels.size()]);
+        mBinding.bcChart.getXAxis().setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return values[(int) value];
+            }
+        });
+
+        // Now invalidate the chart to redraw.
+        mBinding.bcChart.invalidate();
+
+
+        /*
         // will nedd to invert instead of padding since display of 0.0f for an empty leads to
         // incorrect representation within the graph itself.
         // this means that lap 1 will be at the top while lap N will be at the bottom.
@@ -135,12 +212,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         entries.add(stackEntry2);
 
         BarDataSet dataSet = new BarDataSet(entries,"data");
-        dataSet.setColors(getColors());
-
-        //dataSet.setColors(R.color.colorAccent, R.color.colorPrimary);
-        //dataSet.addColor(R.color.colorAccent);
-        //dataSet.addColor(R.color.colorPrimary);
-        //dataSet.color
+        dataSet.setColors(getColors(maximumLaps));
 
         ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
         dataSets.add(dataSet);
@@ -175,7 +247,6 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         });
         mBinding.bcChart.getXAxis().setGranularity(1f);
 
-
         mBinding.bcChart.getAxisLeft().setDrawAxisLine(true);
         mBinding.bcChart.getAxisLeft().setDrawGridLines(false);
         mBinding.bcChart.getAxisLeft().setDrawLabels(false);
@@ -192,15 +263,13 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         mBinding.bcChart.setDoubleTapToZoomEnabled(false);
 
         mBinding.bcChart.invalidate(); // refresh
+        */
     }
 
-    private int[] getColors() {
-
-        // will need to be the largest number of laps across all the sessions.
-        int stacksize = 4;
+    private int[] getColors(int count) {
 
         // have as many colors as stack-values per entry
-        int[] colors = new int[stacksize];
+        int[] colors = new int[count];
 
         for (int i = 0; i < colors.length; i++) {
             colors[i] = ColorTemplate.MATERIAL_COLORS[i];
