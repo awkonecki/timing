@@ -14,11 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    private List<TimedActivity> timedActivities = new ArrayList<>();
+    private List<TimedActivity> mTimedActivities = new ArrayList<>();
     private Context mContext = null;
 
-    public TimedActivityAdapter(Context context, List<TimedActivity> timedActivities) {
-        timedActivities = new ArrayList<>(timedActivities);
+    public TimedActivityAdapter(@NonNull Context context, List<TimedActivity> timedActivities) {
+        mTimedActivities = new ArrayList<>(timedActivities);
         mContext = context;
     }
 
@@ -36,14 +36,14 @@ public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (position >= 0 && position < timedActivities.size()) {
-            ((TimedActivityViewHolder)holder).bind(timedActivities.get(position));
+        if (position >= 0 && position < mTimedActivities.size()) {
+            ((TimedActivityViewHolder)holder).bind(mTimedActivities.get(position));
         }
     }
 
     @Override
     public int getItemCount() {
-        return timedActivities.size();
+        return mTimedActivities.size();
     }
 
     private class TimedActivityViewHolder extends RecyclerView.ViewHolder {
@@ -55,7 +55,8 @@ public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
 
         public void bind(TimedActivity timedActivity) {
-
+            mBinding.tvTimedActivityName.setText(timedActivity.getName());
+            mBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
         }
     }
 }
