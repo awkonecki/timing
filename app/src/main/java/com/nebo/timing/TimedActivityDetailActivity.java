@@ -12,12 +12,18 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.common.base.Stopwatch;
 import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.StopWatch;
@@ -94,6 +100,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             // use the instance data
             mTimedActivity = savedInstanceState.getParcelable(
                     getString(R.string.key_timed_activity));
+            mTimedActivity = TimedActivity.getTimedActivity();
         }
         else {
             // use the intent passed data, assume for now the data is passed in via the intent.
@@ -117,35 +124,95 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     }
 
     private void buildGraph() {
-        LineChart chart = (LineChart) findViewById(R.id.chart);
+        List<String> sessionLabels = new ArrayList<>();
+        int maximumLaps = 0, index = 0;
+        List<BarEntry> sessionLapEntries = new ArrayList<>();
 
-        BarEntry stackEntry1 = new BarEntry(0f, new float [] {2.31f,4.51f,34.5f});
-        BarEntry stackEntry2 = new BarEntry(1f, new float [] {4.41f,13.27f,22.5f,13.6f});
+        // Setting up the stacked bar chart data.
+        if (mTimedActivity != null && mTimedActivity.getActivitySessions() != null) {
+            for (ActivitySession session : mTimedActivity.getActivitySessions()) {
+                float[] lapTimes = new float[0];
 
+                if (session != null && session.getSessionLapTimes() != null) {
+                    // Need to build the bar entry for each session's time laps.
+                    lapTimes = new float[session.getSessionLapTimes().length];
 
-        List<BarEntry> entries = new ArrayList<>();
-        entries.add(stackEntry1);
-        entries.add(stackEntry2);
+                    for (int lapIndex = 0; lapIndex < lapTimes.length; lapIndex++) {
+                        // Each lap is the total number of milli-seconds for the lap.
+                        lapTimes[lapIndex] = (float) (session.getSessionLapTimes()[lapIndex] / 1000L);
+                    }
 
-        BarDataSet dataSet = new BarDataSet(entries,"data");
+                    // save the detail w.r.t the maximum number of laps
+                    if (lapTimes.length > maximumLaps) {
+                        maximumLaps = lapTimes.length;
+                    }
 
-        //dataSet.setColors(R.color.colorAccent, R.color.colorPrimary);
-        //dataSet.addColor(R.color.colorAccent);
-        //dataSet.addColor(R.color.colorPrimary);
-        //dataSet.color
+                    sessionLabels.add(Integer.toString(index));
+                    sessionLapEntries.add(new BarEntry((float) index, lapTimes));
+                    index++;
+                }
+            }
+        }
 
-        BarData data = new BarData(dataSet);
+        // Movement of the data to the correct type.
+        BarDataSet barDataSet = new BarDataSet(sessionLapEntries, "Session Lap Time");
+        barDataSet.setColors(getColors(maximumLaps));
+        // TODO @awkonecki Labeling of laps needs to be in reversed order.
+        barDataSet.setStackLabels(new String [] {"Lap 0", "Lap 1", "Lap 2", "Undefined"});
 
+        ArrayList<IBarDataSet> barDataSets = new ArrayList<IBarDataSet>();
+        barDataSets.add(barDataSet);
 
-        float groupSpace = 0.06f;
-        float barSpace = 0.02f; // x2 dataset
-        float barWidth = 0.9f; // x2 dataset
-        // (0.02 + 0.45) * 2 + 0.06 = 1.00 -> interval per "group"
+        BarData barData = new BarData(barDataSets);
 
-        data.setBarWidth(barWidth);
+        // Adding the data to the chart.
+        barData.setBarWidth(0.95f);
+        mBinding.bcChart.setData(barData);
 
+        // setting the bar chart properties.
         mBinding.bcChart.setFitBars(true);
-        mBinding.bcChart.setData(data);
-        mBinding.bcChart.invalidate(); // refresh
+        mBinding.bcChart.setDrawGridBackground(false);
+        mBinding.bcChart.setDrawBarShadow(false);
+        mBinding.bcChart.setDrawValueAboveBar(false);
+        mBinding.bcChart.setTouchEnabled(false);
+        mBinding.bcChart.setPinchZoom(false);
+        mBinding.bcChart.setDoubleTapToZoomEnabled(false);
+        mBinding.bcChart.getDescription().setEnabled(false);
+
+        mBinding.bcChart.getAxisLeft().setDrawAxisLine(true);
+        mBinding.bcChart.getAxisLeft().setDrawGridLines(false);
+        mBinding.bcChart.getAxisLeft().setDrawLabels(false);
+
+        mBinding.bcChart.getAxisRight().setDrawAxisLine(false);
+        mBinding.bcChart.getAxisRight().setDrawGridLines(false);
+        mBinding.bcChart.getAxisRight().setDrawLabels(false);
+
+        mBinding.bcChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+        mBinding.bcChart.getXAxis().setDrawGridLines(false);
+        mBinding.bcChart.getXAxis().setDrawAxisLine(false);
+        mBinding.bcChart.getXAxis().setGranularity(1f);
+
+        final String [] values = sessionLabels.toArray(new String [sessionLabels.size()]);
+        mBinding.bcChart.getXAxis().setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return values[(int) value];
+            }
+        });
+
+        // Now invalidate the chart to redraw.
+        mBinding.bcChart.invalidate();
+    }
+
+    private int[] getColors(int count) {
+
+        // have as many colors as stack-values per entry
+        int[] colors = new int[count];
+
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = ColorTemplate.MATERIAL_COLORS[i];
+        }
+
+        return colors;
     }
 }
