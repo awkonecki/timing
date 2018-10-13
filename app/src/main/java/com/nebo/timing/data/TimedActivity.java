@@ -27,6 +27,9 @@ public class TimedActivity {
         ActivitySession session1 = new ActivitySession();
         ActivitySession session2 = new ActivitySession();
 
+        session1.setSessionLapTimes(new long [] {1541, 2131, 1227, 39582});
+        session2.setSessionLapTimes(new long [] {21784, 13002, 1412, 12964});
+
         timedActivity.activitySessions.add(session1);
         timedActivity.activitySessions.add(session2);
 

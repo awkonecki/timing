@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -156,6 +157,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         // Movement of the data to the correct type.
         BarDataSet barDataSet = new BarDataSet(sessionLapEntries, "Session Lap Time");
         barDataSet.setColors(getColors(maximumLaps));
+        barDataSet.setStackLabels(new String [] {"Lap 0", "Lap 1", "Lap 2", "Undefined"});
 
         ArrayList<IBarDataSet> barDataSets = new ArrayList<IBarDataSet>();
         barDataSets.add(barDataSet);
@@ -174,6 +176,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         mBinding.bcChart.setTouchEnabled(false);
         mBinding.bcChart.setPinchZoom(false);
         mBinding.bcChart.setDoubleTapToZoomEnabled(false);
+        mBinding.bcChart.getDescription().setEnabled(false);
 
         mBinding.bcChart.getAxisLeft().setDrawAxisLine(true);
         mBinding.bcChart.getAxisLeft().setDrawGridLines(false);
@@ -198,72 +201,6 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
         // Now invalidate the chart to redraw.
         mBinding.bcChart.invalidate();
-
-
-        /*
-        // will nedd to invert instead of padding since display of 0.0f for an empty leads to
-        // incorrect representation within the graph itself.
-        // this means that lap 1 will be at the top while lap N will be at the bottom.
-        BarEntry stackEntry1 = new BarEntry(0f, new float [] {2.31f,4.51f,34.5f});
-        BarEntry stackEntry2 = new BarEntry(1f, new float [] {4.41f,13.27f,22.5f,13.6f});
-
-        List<BarEntry> entries = new ArrayList<>();
-        entries.add(stackEntry1);
-        entries.add(stackEntry2);
-
-        BarDataSet dataSet = new BarDataSet(entries,"data");
-        dataSet.setColors(getColors(maximumLaps));
-
-        ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
-        dataSets.add(dataSet);
-
-        BarData data = new BarData(dataSets);
-
-        float groupSpace = 0.06f;
-        float barSpace = 0.02f; // x2 dataset
-        float barWidth = 0.9f; // x2 dataset
-        // (0.02 + 0.45) * 2 + 0.06 = 1.00 -> interval per "group"
-
-        data.setBarWidth(barWidth);
-
-        // Set formatting
-        final String [] values = new String [] {"1", "2"};
-
-        mBinding.bcChart.setFitBars(true);
-        mBinding.bcChart.setData(data);
-        // Dont really want the grid, adds to much visual noise.
-        mBinding.bcChart.setDrawGridBackground(false);
-        mBinding.bcChart.setDrawBarShadow(false);
-
-        mBinding.bcChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
-        mBinding.bcChart.getXAxis().setDrawGridLines(false);
-        mBinding.bcChart.getXAxis().setDrawAxisLine(false);
-
-        mBinding.bcChart.getXAxis().setValueFormatter(new IAxisValueFormatter() {
-            @Override
-            public String getFormattedValue(float value, AxisBase axis) {
-                return values[(int) value];
-            }
-        });
-        mBinding.bcChart.getXAxis().setGranularity(1f);
-
-        mBinding.bcChart.getAxisLeft().setDrawAxisLine(true);
-        mBinding.bcChart.getAxisLeft().setDrawGridLines(false);
-        mBinding.bcChart.getAxisLeft().setDrawLabels(false);
-
-        mBinding.bcChart.getAxisRight().setDrawAxisLine(false);
-        mBinding.bcChart.getAxisRight().setDrawGridLines(false);
-        mBinding.bcChart.getAxisRight().setDrawLabels(false);
-
-
-        // Dont want values above the bar
-        mBinding.bcChart.setDrawValueAboveBar(false);
-        mBinding.bcChart.setTouchEnabled(false);
-        mBinding.bcChart.setPinchZoom(false);
-        mBinding.bcChart.setDoubleTapToZoomEnabled(false);
-
-        mBinding.bcChart.invalidate(); // refresh
-        */
     }
 
     private int[] getColors(int count) {
