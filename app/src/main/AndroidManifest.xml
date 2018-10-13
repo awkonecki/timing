@@ -21,6 +21,18 @@
             </intent-filter>
             -->
         </activity>
+
+        <activity android:name=".ActivityTimerActivity"
+            android:launchMode="singleTop" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
         <activity android:name=".StopWatchActivity"
             android:parentActivityName=".MainActivity" >
             <!--
@@ -33,13 +45,13 @@
         </activity>
         <activity android:name=".TimedActivityDetailActivity"
             android:parentActivityName=".MainActivity" >
-
+            <!--
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
+            -->
         </activity>
     </application>
 
