@@ -157,6 +157,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         // Movement of the data to the correct type.
         BarDataSet barDataSet = new BarDataSet(sessionLapEntries, "Session Lap Time");
         barDataSet.setColors(getColors(maximumLaps));
+        // TODO @awkonecki Labeling of laps needs to be in reversed order.
         barDataSet.setStackLabels(new String [] {"Lap 0", "Lap 1", "Lap 2", "Undefined"});
 
         ArrayList<IBarDataSet> barDataSets = new ArrayList<IBarDataSet>();
