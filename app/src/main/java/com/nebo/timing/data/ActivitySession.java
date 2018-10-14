@@ -1,13 +1,28 @@
 package com.nebo.timing.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.HashSet;
 
-public class ActivitySession {
+public class ActivitySession implements Parcelable {
     private String name = null;
     private long sessionStartDate = 0L;
     private long totalTime = 0L;
     private long [] sessionLapTimes;
     private HashSet<String> labels = new HashSet<String>();
+
+    private ActivitySession(Parcel parcel) {
+        if (parcel != null) {
+            name = parcel.readString();
+            sessionStartDate = parcel.readLong();
+            totalTime = parcel.readLong();
+            parcel.readLongArray(sessionLapTimes);
+            // TODO @awkonecki figure out if or need labels.
+            // String [] tempLabels = new String [parcel.dataSize()];
+            // parcel.readStringArray(tempLabels);
+        }
+    }
 
     public ActivitySession() {}
 
@@ -50,5 +65,36 @@ public class ActivitySession {
         String [] result = new String [this.labels.size()];
         result = this.labels.toArray(result);
         return result;
+    }
+
+    public static final Creator<ActivitySession> CREATOR = new Creator<ActivitySession>() {
+        @Override
+        public ActivitySession createFromParcel(Parcel source) {
+            return new ActivitySession(source);
+        }
+
+        @Override
+        public ActivitySession[] newArray(int size) {
+            if (size > 0) {
+                return new ActivitySession[size];
+            }
+
+            return new ActivitySession[0];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        if (dest != null) {
+            dest.writeString(name);
+            dest.writeLong(sessionStartDate);
+            dest.writeLong(totalTime);
+            dest.writeLongArray(sessionLapTimes);
+        }
     }
 }
