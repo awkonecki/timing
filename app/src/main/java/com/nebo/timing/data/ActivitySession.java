@@ -1,15 +1,18 @@
 package com.nebo.timing.data;
 
+import android.nfc.NfcAdapter;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class ActivitySession implements Parcelable {
     private String name = null;
     private long sessionStartDate = 0L;
     private long totalTime = 0L;
-    private long [] sessionLapTimes;
+    private List<Long> sessionLapTimes = new ArrayList<>();
     private HashSet<String> labels = new HashSet<String>();
 
     private ActivitySession(Parcel parcel) {
@@ -17,7 +20,8 @@ public class ActivitySession implements Parcelable {
             name = parcel.readString();
             sessionStartDate = parcel.readLong();
             totalTime = parcel.readLong();
-            parcel.readLongArray(sessionLapTimes);
+            parcel.readList(sessionLapTimes, null);
+
             // TODO @awkonecki figure out if or need labels.
             // String [] tempLabels = new String [parcel.dataSize()];
             // parcel.readStringArray(tempLabels);
@@ -25,6 +29,19 @@ public class ActivitySession implements Parcelable {
     }
 
     public ActivitySession() {}
+
+    public long getTotalTime() {
+        return this.totalTime;
+    }
+
+    public ActivitySession(String name) {
+        this.name = name;
+    }
+
+    public void addSessionLapTime(long time) {
+        sessionLapTimes.add(time);
+        totalTime += time;
+    }
 
     public void setName(String name) {
         this.name = name;
@@ -42,15 +59,8 @@ public class ActivitySession implements Parcelable {
         return this.sessionStartDate;
     }
 
-    public void setSessionLapTimes(long [] lapTimes) {
-        if (lapTimes != null && lapTimes.length > 0) {
-            this.sessionLapTimes = new long [lapTimes.length];
-            System.arraycopy(lapTimes, 0, this.sessionLapTimes, 0, lapTimes.length);
-        }
-    }
-
-    public long [] getSessionLapTimes() {
-        return this.sessionLapTimes;
+    public List<Long> getSessionLapTimes() {
+        return new ArrayList<>(this.sessionLapTimes);
     }
 
     public void setLabels(String [] labels) {
@@ -94,7 +104,7 @@ public class ActivitySession implements Parcelable {
             dest.writeString(name);
             dest.writeLong(sessionStartDate);
             dest.writeLong(totalTime);
-            dest.writeLongArray(sessionLapTimes);
+            dest.writeList(sessionLapTimes);
         }
     }
 }

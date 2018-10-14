@@ -26,6 +26,7 @@ import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
+import com.nebo.timing.util.TimerActivityUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,9 +47,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         // Static data
         // TODO @awkonecki remove later
         mTimedActivities.clear();
-        mTimedActivities.add(TimedActivity.getTimedActivity());
-        mTimedActivities.add(TimedActivity.getTimedActivity());
-        mTimedActivities.add(TimedActivity.getTimedActivity());
+        mTimedActivities = TimerActivityUtils.generateActivities(new String [] {
+                "Chatper 4",
+                "Chapter 5",
+                "Chapter 6",
+                "Chapter 7",
+                "Chapter 8",
+                "Going to Work"
+        });
 
         if (savedInstanceState != null) {
 

@@ -100,12 +100,10 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             // use the instance data
             mTimedActivity = savedInstanceState.getParcelable(
                     getString(R.string.key_timed_activity));
-            mTimedActivity = TimedActivity.getTimedActivity();
         }
         else {
             // use the intent passed data, assume for now the data is passed in via the intent.
             mTimedActivity = getIntent().getParcelableExtra(getString(R.string.key_timed_activity));
-            mTimedActivity = TimedActivity.getTimedActivity();
         }
 
         // setup the activity's recyclerview widget
@@ -135,11 +133,11 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
                 if (session != null && session.getSessionLapTimes() != null) {
                     // Need to build the bar entry for each session's time laps.
-                    lapTimes = new float[session.getSessionLapTimes().length];
+                    // lapTimes = new float[session.getSessionLapTimes().length];
 
                     for (int lapIndex = 0; lapIndex < lapTimes.length; lapIndex++) {
                         // Each lap is the total number of milli-seconds for the lap.
-                        lapTimes[lapIndex] = (float) (session.getSessionLapTimes()[lapIndex] / 1000L);
+                        // lapTimes[lapIndex] = (float) (session.getSessionLapTimes()[lapIndex] / 1000L);
                     }
 
                     // save the detail w.r.t the maximum number of laps
