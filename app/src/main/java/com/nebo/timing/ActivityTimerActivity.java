@@ -31,7 +31,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ActivityTimerActivity extends AppCompatActivity {
+public class ActivityTimerActivity extends AppCompatActivity implements
+    TimedActivityAdapter.OnTimedActivityClick
+    {
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
 
@@ -58,6 +60,7 @@ public class ActivityTimerActivity extends AppCompatActivity {
 
         // Setup of the UI recyclerview widget
         mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
+                this,
                 this,
                 mTimedActivities));
         mBinding.rvTimedActivities.setLayoutManager(new LinearLayoutManager(
@@ -123,4 +126,9 @@ public class ActivityTimerActivity extends AppCompatActivity {
 
         return colors;
     }
-}
+
+        @Override
+        public void onClick(TimedActivity timeActivity) {
+            // Support the launching of the intent to get the timeActivity details.
+        }
+    }
