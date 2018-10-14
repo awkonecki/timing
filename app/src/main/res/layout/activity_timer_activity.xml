@@ -8,15 +8,29 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <TextView
+            android:id="@+id/tv_rv_timer_activities_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_activities"/>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rv_timed_activities"
             android:layout_weight="4"
             android:layout_width="match_parent"
-            android:layout_height="0dp" />
+            android:layout_height="0dp"
+            android:layout_margin="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_graph_timer_activities_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_activities_graph"
+            />
 
         <com.github.mikephil.charting.charts.PieChart
             android:id="@+id/pc_activities_by_category"
+            android:layout_margin="8dp"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="4" />
