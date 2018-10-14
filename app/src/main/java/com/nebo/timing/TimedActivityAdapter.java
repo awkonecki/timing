@@ -5,8 +5,10 @@ import android.databinding.DataBindingUtil;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
+import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.TimedActivityElementBinding;
 
@@ -16,10 +18,20 @@ import java.util.List;
 public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
     private Context mContext = null;
+    private OnTimedActivityClick mTimedActivityClick = null;
 
-    public TimedActivityAdapter(@NonNull Context context, List<TimedActivity> timedActivities) {
+    public interface OnTimedActivityClick {
+        void onClick(TimedActivity timeActivity);
+    }
+
+    public TimedActivityAdapter(
+            @NonNull Context context,
+            OnTimedActivityClick timedActivityClick,
+            List<TimedActivity> timedActivities)
+    {
         mTimedActivities = new ArrayList<>(timedActivities);
         mContext = context;
+        mTimedActivityClick = timedActivityClick;
     }
 
     @NonNull
@@ -52,11 +64,26 @@ public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.View
         public TimedActivityViewHolder(@NonNull TimedActivityElementBinding binding) {
             super(binding.getRoot());
             mBinding = binding;
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+
+                    if (mTimedActivityClick != null &&
+                            position >= 0 &&
+                            position < mTimedActivities.size())
+                    {
+                        mTimedActivityClick.onClick(mTimedActivities.get(position));
+                    }
+                }
+            });
         }
 
         public void bind(TimedActivity timedActivity) {
             mBinding.tvTimedActivityName.setText(timedActivity.getName());
             mBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
+            mBinding.tvTimedActivityTime.setText(
+                    StopWatch.buildTimeStamp(timedActivity.getTotalElapsedTime()));
         }
     }
 }
