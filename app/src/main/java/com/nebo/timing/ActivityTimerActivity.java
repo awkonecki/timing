@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -121,7 +122,13 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
         @Override
-        public void onClick(TimedActivity timeActivity) {
+        public void onClick(TimedActivity timedActivity) {
             // Support the launching of the intent to get the timeActivity details.
+            Intent intent = new Intent(getApplicationContext(), TimedActivityDetailActivity.class);
+
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(getString(R.string.key_timed_activity), timedActivity);
+
+            startActivity(intent, bundle);
         }
     }
