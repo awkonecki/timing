@@ -93,7 +93,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         }
 
         PieDataSet pieDataSet = new PieDataSet(categoryEntries, "Category Times %");
-        pieDataSet.setColors(getColors(categoryElapsedTimeTotals.size()));
+        pieDataSet.setColors(ActivityTimerUtils.getColors(categoryElapsedTimeTotals.size()));
 
         PieData pieData = new PieData(pieDataSet);
         pieData.setValueFormatter(new PercentFormatter());
@@ -109,27 +109,16 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         mBinding.pcActivitiesByCategory.invalidate();
     }
 
-    private int[] getColors(int count) {
+    @Override
+    public void onClick(TimedActivity timedActivity) {
+        // Support the launching of the intent to get the timeActivity details.
+        Intent intent = new Intent(getApplicationContext(), TimedActivityDetailActivity.class);
 
-        // have as many colors as stack-values per entry
-        int[] colors = new int[count];
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(getString(R.string.key_timed_activity), timedActivity);
 
-        for (int i = 0; i < colors.length; i++) {
-            colors[i] = ColorTemplate.MATERIAL_COLORS[i];
-        }
-
-        return colors;
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
-        @Override
-        public void onClick(TimedActivity timedActivity) {
-            // Support the launching of the intent to get the timeActivity details.
-            Intent intent = new Intent(getApplicationContext(), TimedActivityDetailActivity.class);
-
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(getString(R.string.key_timed_activity), timedActivity);
-
-            intent.putExtras(bundle);
-            startActivity(intent);
-        }
     }

@@ -30,6 +30,7 @@ import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimedActivityDetailBinding;
 import com.nebo.timing.databinding.ActivitySessionElementBinding;
+import com.nebo.timing.util.ActivityTimerUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -82,6 +83,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             public void bind(ActivitySession session) {
                 mBinding.tvActivitySessionDate.setText("Date");
                 mBinding.tvActivitySessionName.setText(session.getName());
+                mBinding.tvActivitySessionTime.setText(StopWatch.buildTimeStamp(session.getTotalTime()));
                 mBinding.tvLabels.setText("Labels");
             }
         }
@@ -122,7 +124,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
                 StopWatch.buildTimeStamp(mTimedActivity.getTotalElapsedTime()));
 
         // Build the graph
-        //buildGraph();
+        buildGraph();
     }
 
     private void buildGraph() {
@@ -137,11 +139,11 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
                 if (session != null && session.getSessionLapTimes() != null) {
                     // Need to build the bar entry for each session's time laps.
-                    // lapTimes = new float[session.getSessionLapTimes().length];
+                    lapTimes = new float[session.getSessionLapTimes().size()];
 
                     for (int lapIndex = 0; lapIndex < lapTimes.length; lapIndex++) {
                         // Each lap is the total number of milli-seconds for the lap.
-                        // lapTimes[lapIndex] = (float) (session.getSessionLapTimes()[lapIndex] / 1000L);
+                        lapTimes[lapIndex] = (float) (session.getSessionLapTimes().get(lapIndex) / 1000L);
                     }
 
                     // save the detail w.r.t the maximum number of laps
@@ -158,9 +160,9 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
         // Movement of the data to the correct type.
         BarDataSet barDataSet = new BarDataSet(sessionLapEntries, "Session Lap Time");
-        barDataSet.setColors(getColors(maximumLaps));
+        barDataSet.setColors(ActivityTimerUtils.getColors(maximumLaps));
         // TODO @awkonecki Labeling of laps needs to be in reversed order.
-        barDataSet.setStackLabels(new String [] {"Lap 0", "Lap 1", "Lap 2", "Undefined"});
+        // barDataSet.setStackLabels(new String [] {"Lap 0", "Lap 1", "Lap 2", "Undefined"});
 
         ArrayList<IBarDataSet> barDataSets = new ArrayList<IBarDataSet>();
         barDataSets.add(barDataSet);
@@ -204,17 +206,5 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
 
         // Now invalidate the chart to redraw.
         mBinding.bcChart.invalidate();
-    }
-
-    private int[] getColors(int count) {
-
-        // have as many colors as stack-values per entry
-        int[] colors = new int[count];
-
-        for (int i = 0; i < colors.length; i++) {
-            colors[i] = ColorTemplate.MATERIAL_COLORS[i];
-        }
-
-        return colors;
     }
 }

@@ -1,5 +1,6 @@
 package com.nebo.timing.util;
 
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 
@@ -36,7 +37,7 @@ public class ActivityTimerUtils {
                         createRandomString(random.nextInt(15) + 1));
 
                 // Add a random number of laps for the session.
-                int totalLaps = random.nextInt(8) + 1;
+                int totalLaps = random.nextInt(4) + 1;
                 for (int lapIndex = 0; lapIndex < totalLaps; lapIndex++) {
                     session.addSessionLapTime((long)(random.nextInt(10000000) + 10000));
                 }
@@ -60,5 +61,16 @@ public class ActivityTimerUtils {
         }
 
         return sb.toString();
+    }
+
+    public static int[] getColors(int count) {
+        // have as many colors as stack-values per entry
+        int[] colors = new int[count];
+
+        for (int i = 0; i < colors.length && i < ColorTemplate.MATERIAL_COLORS.length; i++) {
+            colors[i] = ColorTemplate.MATERIAL_COLORS[i];
+        }
+
+        return colors;
     }
 }
