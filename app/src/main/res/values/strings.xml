@@ -16,4 +16,5 @@
     <string name="key_timed_activity" translatable="false">timed activity</string>
     <string name="label_activities" translatable="true">Activities</string>
     <string name="label_activities_graph" translatable="true">Time Spent % By Category</string>
+    <string name="menu_launch_stop_watch" translatable="true">Launch StopWatch</string>
 </resources>

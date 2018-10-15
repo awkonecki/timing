@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
+import android.view.Menu;
+import android.view.MenuInflater;
 
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
@@ -25,6 +27,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     {
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu_activity_timer, menu);
+        return true;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
