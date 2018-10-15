@@ -16,6 +16,20 @@ public class TimedActivity implements Parcelable {
 
     public TimedActivity() {}
 
+    public TimedActivity(String name, String category) {
+        this.name = name;
+        this.category = category;
+    }
+
+    public void setTotalElapsedTime(long totalElapsedTime) {
+        this.totalElapsedTime = totalElapsedTime;
+    }
+
+    public void addActivitySession(ActivitySession activitySession) {
+        activitySessions.add(activitySession);
+        totalElapsedTime += activitySession.getTotalTime();
+    }
+
     public List<ActivitySession> getActivitySessions() {
         return new ArrayList<>(activitySessions);
     }
@@ -30,24 +44,6 @@ public class TimedActivity implements Parcelable {
 
     public String getName() {
         return name;
-    }
-
-    public static TimedActivity getTimedActivity() {
-        TimedActivity timedActivity = new TimedActivity();
-        timedActivity.totalElapsedTime = 1234567L;
-        timedActivity.category = "Study";
-        timedActivity.name = "CTCI";
-
-        ActivitySession session1 = new ActivitySession();
-        ActivitySession session2 = new ActivitySession();
-
-        session1.setSessionLapTimes(new long [] {1541, 2131, 1227, 39582});
-        session2.setSessionLapTimes(new long [] {21784, 13002, 1412, 12964});
-
-        timedActivity.activitySessions.add(session1);
-        timedActivity.activitySessions.add(session2);
-
-        return timedActivity;
     }
 
     private TimedActivity(Parcel source) {
