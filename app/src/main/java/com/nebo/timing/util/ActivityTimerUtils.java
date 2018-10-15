@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class TimerActivityUtils {
+public class ActivityTimerUtils {
 
     private static final String [] CATEGORIES = new String [] {
             "Study",

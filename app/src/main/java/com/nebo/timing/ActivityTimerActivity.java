@@ -2,31 +2,18 @@ package com.nebo.timing;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.util.Log;
 
-import com.github.mikephil.charting.components.AxisBase;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.utils.ViewPortHandler;
-import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
-import com.nebo.timing.util.TimerActivityUtils;
+import com.nebo.timing.util.ActivityTimerUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +34,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         // Static data
         // TODO @awkonecki remove later
         mTimedActivities.clear();
-        mTimedActivities = TimerActivityUtils.generateActivities(new String [] {
+        mTimedActivities = ActivityTimerUtils.generateActivities(new String [] {
                 "Chatper 4",
                 "Chapter 5",
                 "Chapter 6",
