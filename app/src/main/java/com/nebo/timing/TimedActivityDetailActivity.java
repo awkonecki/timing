@@ -103,7 +103,11 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         }
         else {
             // use the intent passed data, assume for now the data is passed in via the intent.
-            mTimedActivity = getIntent().getParcelableExtra(getString(R.string.key_timed_activity));
+            Bundle bundle = getIntent().getExtras();
+
+            if (bundle != null) {
+                mTimedActivity = bundle.getParcelable(getString(R.string.key_timed_activity));
+            }
         }
 
         // setup the activity's recyclerview widget
@@ -118,7 +122,7 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
                 StopWatch.buildTimeStamp(mTimedActivity.getTotalElapsedTime()));
 
         // Build the graph
-        buildGraph();
+        //buildGraph();
     }
 
     private void buildGraph() {

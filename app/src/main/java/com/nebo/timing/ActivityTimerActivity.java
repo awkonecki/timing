@@ -129,6 +129,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             Bundle bundle = new Bundle();
             bundle.putParcelable(getString(R.string.key_timed_activity), timedActivity);
 
-            startActivity(intent, bundle);
+            intent.putExtras(bundle);
+            startActivity(intent);
         }
     }
