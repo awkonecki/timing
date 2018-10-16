@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.PersistableBundle;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.databinding.ActivityStopwatchBinding;
@@ -16,6 +18,7 @@ import com.nebo.timing.ui.LapTimesFragment;
 import com.nebo.timing.ui.StopWatchActionsFragment;
 import com.nebo.timing.ui.StopWatchActionsFragment.ACTIONS;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -72,6 +75,47 @@ public class StopWatchActivity extends AppCompatActivity implements
                     "The lap time fragment does not exist and trying to initialize."
             );
         }
+    }
+
+    private void saveAndReturn() {
+        Bundle bundle = new Bundle();
+        long [] lapsToSave = new long [mLaps.size()];
+        long prevLap = 0L;
+        long totalTime = 0L;
+
+        // populate the array that will be passed back as a bundle.
+        for (int index = lapsToSave.length - 1; index >= 0; index--) {
+            lapsToSave[index] = mLaps.get(index) - prevLap;
+            prevLap = mLaps.get(index);
+        }
+
+        if (mLaps.size() > 0) {
+            totalTime = mLaps.get(0);
+        }
+
+        bundle.putLong(getString(R.string.key_total_time), totalTime);
+        bundle.putLongArray(getString(R.string.key_lap_times), lapsToSave);
+
+        Intent intent = new Intent();
+        intent.putExtras(bundle);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        if (item != null) {
+            switch (item.getItemId()) {
+                case R.id.mi_save:
+                    mStopWatch.pause();
+                    saveAndReturn();
+                    break;
+            }
+        }
+
+        return true;
     }
 
     @Override
