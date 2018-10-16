@@ -14,6 +14,7 @@
     <string name="key_stopwatch_state" translatable="false">stopwatch state</string>
     <string name="key_stopwatch_actions_state" translatable="false">stopwatch actions state</string>
     <string name="key_timed_activity" translatable="false">timed activity</string>
+    <string name="key_total_time" translatable="false">total time</string>
     <string name="label_activities" translatable="true">Activities</string>
     <string name="label_activities_graph" translatable="true">Time Spent % By Category</string>
     <string name="menu_launch_stop_watch" translatable="true">Launch StopWatch</string>

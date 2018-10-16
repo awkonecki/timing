@@ -30,7 +30,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
 
-    private static final int STOPWATCH_ACTIVITY = 1;
+    public static final int STOPWATCH_ACTIVITY = 1;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
