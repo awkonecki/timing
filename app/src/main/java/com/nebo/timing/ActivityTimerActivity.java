@@ -41,6 +41,21 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("ActivityTimerActivity", "onActivityResult " + Integer.toString(requestCode) + " " + Integer.toString(resultCode));
+
+        switch (requestCode) {
+            case STOPWATCH_ACTIVITY:
+                if (resultCode == RESULT_OK) {
+                    // Get the data that is returned via the intent.
+                    Bundle bundle = new Bundle();
+                    if (data != null) {
+                        bundle = data.getExtras();
+                    }
+
+                    // Handle the data for the for the individual laps.
+                    // need to handle assigning it to an activity (new / old).
+                }
+                break;
+        }
     }
 
     @Override
