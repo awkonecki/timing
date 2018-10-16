@@ -81,6 +81,7 @@ public class StopWatchActivity extends AppCompatActivity implements
         Bundle bundle = new Bundle();
         long [] lapsToSave = new long [mLaps.size()];
         long prevLap = 0L;
+        long totalTime = 0L;
 
         // populate the array that will be passed back as a bundle.
         for (int index = lapsToSave.length - 1; index >= 0; index--) {
@@ -88,7 +89,11 @@ public class StopWatchActivity extends AppCompatActivity implements
             prevLap = mLaps.get(index);
         }
 
-        bundle.putLong(getString(R.string.key_total_time), mLaps.get(0));
+        if (mLaps.size() > 0) {
+            totalTime = mLaps.get(0);
+        }
+
+        bundle.putLong(getString(R.string.key_total_time), totalTime);
         bundle.putLongArray(getString(R.string.key_lap_times), lapsToSave);
 
         Intent intent = new Intent();
