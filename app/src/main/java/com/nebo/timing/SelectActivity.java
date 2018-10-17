@@ -8,11 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.nebo.timing.data.TimedActivity;
-import com.nebo.timing.databinding.ActivitySaveTimeBinding;
+import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 import com.nebo.timing.databinding.TimedActivityElementBinding;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.List;
 
 public class SelectActivity extends AppCompatActivity {
 
-    private ActivitySaveTimeBinding mBinding = null;
+    private ActivitySelectActivityBinding mBinding = null;
     private List<TimedActivity> mActivities = new ArrayList<>();
     private TimedActivity mSelectedActivity = null;
 
@@ -51,16 +52,17 @@ public class SelectActivity extends AppCompatActivity {
         }
 
         private class SelectActivityView extends RecyclerView.ViewHolder {
-            private final TimedActivityElementBinding mBinding;
+            private final TimedActivityElementBinding elementBinding;
 
             public SelectActivityView(TimedActivityElementBinding binding) {
                 super(binding.getRoot());
-                mBinding = binding;
-                mBinding.tvTimedActivityTime.setVisibility(View.GONE);
+                elementBinding = binding;
+                elementBinding.tvTimedActivityTime.setVisibility(View.GONE);
             }
 
             public void bind(TimedActivity timedActivity) {
-
+                elementBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
+                elementBinding.tvTimedActivityName.setText(timedActivity.getName());
             }
         }
     }
@@ -69,7 +71,23 @@ public class SelectActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        getMenuInflater().inflate(R.menu.menu_save_time, menu);
+        getMenuInflater().inflate(R.menu.menu_select_activity, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        if (item != null) {
+            switch (item.getItemId()) {
+                case R.id.mi_save_selected_activity:
+                    // TODO @awkonecki return status and selected activity.
+                    finish();
+                    break;
+            }
+        }
 
         return true;
     }
@@ -78,7 +96,7 @@ public class SelectActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_save_time);
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
 
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(

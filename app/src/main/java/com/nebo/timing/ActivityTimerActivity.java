@@ -30,21 +30,21 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
-    public static final int SAVETIME_ACTIVITY = 2;
+    public static final int SELECT_ACTIVITY = 2;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
     }
 
-    private void onSaveTime() {
+    private void selectActivity() {
         Intent intent = new Intent(this, SelectActivity.class);
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(
                 getString(R.string.key_timed_activities),
                 (ArrayList<TimedActivity>) mTimedActivities);
         intent.putExtras(bundle);
-        startActivityForResult(intent, SAVETIME_ACTIVITY);
+        startActivityForResult(intent, SELECT_ACTIVITY);
     }
 
     @Override
@@ -63,8 +63,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
                     // Handle the data for the for the individual laps.
                     // need to handle assigning it to an activity (new / old).
-                    onSaveTime();
+                    selectActivity();
                 }
+                break;
+            case SELECT_ACTIVITY:
+                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned.");
                 break;
         }
     }
