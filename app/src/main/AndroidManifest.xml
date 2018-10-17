@@ -54,7 +54,7 @@
             -->
         </activity>
 
-        <activity android:name=".SaveTimeActivity"
+        <activity android:name=".SelectActivity"
             android:parentActivityName=".MainActivity" >
             <!--
             <intent-filter>

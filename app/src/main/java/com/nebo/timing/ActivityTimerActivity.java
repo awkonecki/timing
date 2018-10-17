@@ -15,7 +15,6 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.github.mikephil.charting.utils.ColorTemplate;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
@@ -39,7 +38,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void onSaveTime() {
-        Intent intent = new Intent(this, SaveTimeActivity.class);
+        Intent intent = new Intent(this, SelectActivity.class);
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(
                 getString(R.string.key_timed_activities),

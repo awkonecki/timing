@@ -12,7 +12,7 @@ import com.nebo.timing.databinding.ActivitySaveTimeBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SaveTimeActivity extends AppCompatActivity {
+public class SelectActivity extends AppCompatActivity {
 
     private ActivitySaveTimeBinding mBinding = null;
     private List<TimedActivity> mActivities = new ArrayList<>();
