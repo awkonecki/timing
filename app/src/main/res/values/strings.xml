@@ -18,4 +18,8 @@
     <string name="label_activities" translatable="true">Activities</string>
     <string name="label_activities_graph" translatable="true">Time Spent % By Category</string>
     <string name="menu_launch_stop_watch" translatable="true">Launch StopWatch</string>
+    <string name="edit_activity_category_default" translatable="true">New Activity Category</string>
+    <string name="edit_activity_name_default" translatable="true">New Activity Name</string>
+    <string name="key_timed_activities" translatable="false">timed activities</string>
+    <string name="icon_save_label" translatable="true">Save</string>
 </resources>
