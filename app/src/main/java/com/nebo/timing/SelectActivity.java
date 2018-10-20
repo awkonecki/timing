@@ -27,6 +27,8 @@ public class SelectActivity extends AppCompatActivity {
 
     private class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+        private View mSelectedView = null;
+
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -51,18 +53,35 @@ public class SelectActivity extends AppCompatActivity {
             return mActivities.size();
         }
 
-        private class SelectActivityView extends RecyclerView.ViewHolder {
+        private class SelectActivityView extends RecyclerView.ViewHolder implements View.OnClickListener {
             private final TimedActivityElementBinding elementBinding;
 
             public SelectActivityView(TimedActivityElementBinding binding) {
                 super(binding.getRoot());
                 elementBinding = binding;
                 elementBinding.tvTimedActivityTime.setVisibility(View.GONE);
+                itemView.setOnClickListener(this);
             }
 
             public void bind(TimedActivity timedActivity) {
                 elementBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
                 elementBinding.tvTimedActivityName.setText(timedActivity.getName());
+            }
+
+            @Override
+            public void onClick(View v) {
+                int index = getAdapterPosition();
+
+                if (index >= 0 && index < mActivities.size()) {
+                    mSelectedActivity = mActivities.get(index);
+                }
+
+                if (mSelectedView != null) {
+                    mSelectedView.setBackgroundColor(0xFFFFFF);
+                }
+
+                v.setBackgroundColor(getColor(R.color.colorAccent));
+                mSelectedView = v;
             }
         }
     }
