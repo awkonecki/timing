@@ -22,4 +22,5 @@
     <string name="edit_activity_name_default" translatable="true">New Activity Name</string>
     <string name="key_timed_activities" translatable="false">timed activities</string>
     <string name="icon_save_label" translatable="true">Save</string>
+    <string name="key_selected_activity" translatable="false">Selected Activity</string>
 </resources>

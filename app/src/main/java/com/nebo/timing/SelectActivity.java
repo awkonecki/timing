@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -72,18 +73,37 @@ public class SelectActivity extends AppCompatActivity {
             public void onClick(View v) {
                 int index = getAdapterPosition();
 
-                if (index >= 0 && index < mActivities.size()) {
-                    mSelectedActivity = mActivities.get(index);
-                }
-
-                if (mSelectedView != null) {
+                if (v == mSelectedView) {
                     mSelectedView.setBackgroundColor(0xFFFFFF);
+                    mSelectedActivity = null;
+                    mSelectedView = null;
                 }
+                else {
+                    if (index >= 0 && index < mActivities.size()) {
+                        mSelectedActivity = mActivities.get(index);
+                    }
 
-                v.setBackgroundColor(getColor(R.color.colorAccent));
-                mSelectedView = v;
+                    if (mSelectedView != null) {
+                        mSelectedView.setBackgroundColor(0xFFFFFF);
+                    }
+
+                    v.setBackgroundColor(getColor(R.color.colorAccent));
+                    mSelectedView = v;
+                }
             }
         }
+    }
+
+    private void saveSelectedAndFinish() {
+        Bundle bundle = new Bundle();
+        if (mSelectedActivity != null) {
+            bundle.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        }
+
+        Intent intent = new Intent();
+        intent.putExtras(bundle);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     @Override
@@ -102,8 +122,7 @@ public class SelectActivity extends AppCompatActivity {
         if (item != null) {
             switch (item.getItemId()) {
                 case R.id.mi_save_selected_activity:
-                    // TODO @awkonecki return status and selected activity.
-                    finish();
+                    saveSelectedAndFinish();
                     break;
             }
         }
