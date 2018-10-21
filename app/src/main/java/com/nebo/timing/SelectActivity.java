@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +18,7 @@ import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 import com.nebo.timing.databinding.TimedActivityElementBinding;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SelectActivity extends AppCompatActivity {
@@ -24,8 +26,11 @@ public class SelectActivity extends AppCompatActivity {
     private ActivitySelectActivityBinding mBinding = null;
     private List<TimedActivity> mActivities = new ArrayList<>();
     private TimedActivity mSelectedActivity = null;
+    private HashMap<String, TimedActivity> mMapOfActivities = new HashMap<>();
 
     private class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        private View mSelectedView = null;
 
         @NonNull
         @Override
@@ -51,20 +56,66 @@ public class SelectActivity extends AppCompatActivity {
             return mActivities.size();
         }
 
-        private class SelectActivityView extends RecyclerView.ViewHolder {
+        public void unSelect() {
+            if (mSelectedView != null) {
+                mSelectedView.setBackgroundColor(0xFFFFFF);
+                mSelectedActivity = null;
+                mSelectedView = null;
+            }
+        }
+
+        private class SelectActivityView extends RecyclerView.ViewHolder implements View.OnClickListener {
             private final TimedActivityElementBinding elementBinding;
 
             public SelectActivityView(TimedActivityElementBinding binding) {
                 super(binding.getRoot());
                 elementBinding = binding;
                 elementBinding.tvTimedActivityTime.setVisibility(View.GONE);
+                itemView.setOnClickListener(this);
             }
 
             public void bind(TimedActivity timedActivity) {
                 elementBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
                 elementBinding.tvTimedActivityName.setText(timedActivity.getName());
             }
+
+            @Override
+            public void onClick(View v) {
+                int index = getAdapterPosition();
+
+                if (v == mSelectedView) {
+                    mSelectedView.setBackgroundColor(0xFFFFFF);
+                    mSelectedActivity = null;
+                    mSelectedView = null;
+                }
+                else {
+                    if (index >= 0 && index < mActivities.size()) {
+                        mSelectedActivity = mActivities.get(index);
+                    }
+
+                    if (mSelectedView != null) {
+                        mSelectedView.setBackgroundColor(0xFFFFFF);
+                    }
+
+                    v.setBackgroundColor(getColor(R.color.colorAccent));
+                    mSelectedView = v;
+
+                    mBinding.tbUseNewActivityToggle.setChecked(false);
+                }
+            }
         }
+    }
+
+    private void saveSelectedAndFinish() {
+        Bundle bundle = new Bundle();
+        if (mSelectedActivity != null) {
+            bundle.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        }
+
+        Intent intent = new Intent();
+        intent.putExtras(bundle);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     @Override
@@ -83,8 +134,7 @@ public class SelectActivity extends AppCompatActivity {
         if (item != null) {
             switch (item.getItemId()) {
                 case R.id.mi_save_selected_activity:
-                    // TODO @awkonecki return status and selected activity.
-                    finish();
+                    saveSelectedAndFinish();
                     break;
             }
         }
@@ -97,12 +147,15 @@ public class SelectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
+        mBinding.tbUseNewActivityToggle.setChecked(false);
 
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(
                     getString(R.string.key_timed_activities));
-            mSelectedActivity = savedInstanceState.getParcelable(
-                    getString(R.string.key_timed_activity));
+            mBinding.etNewActivityName.setText(
+                    savedInstanceState.getString(getString(R.string.key_new_name_string)));
+            mBinding.etNewActivityCategory.setText(
+                    savedInstanceState.getString(getString(R.string.key_new_category_string)));
         }
         else {
             // process intent data.
@@ -114,6 +167,11 @@ public class SelectActivity extends AppCompatActivity {
             }
         }
 
+        // Setup the hash set to aid in making sure unique activities by name.
+        for (TimedActivity activity : mActivities) {
+            mMapOfActivities.put(activity.getName(), activity);
+        }
+
         // setup the view's recyclerview widget
         mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter());
         mBinding.rvSaveTimeActivities.setLayoutManager(
@@ -122,6 +180,23 @@ public class SelectActivity extends AppCompatActivity {
                         LinearLayoutManager.VERTICAL,
                         false));
         mBinding.rvSaveTimeActivities.setHasFixedSize(true);
+
+        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBinding.tbUseNewActivityToggle.isChecked()) {
+                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
+                    String name = mBinding.etNewActivityName.getText().toString();
+                    String category = mBinding.etNewActivityCategory.getText().toString();
+
+                    mSelectedActivity = mMapOfActivities.get(name);
+
+                    if (mSelectedActivity == null) {
+                        mSelectedActivity = new TimedActivity(name, category);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -129,5 +204,13 @@ public class SelectActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(
                 getString(R.string.key_timed_activities), (ArrayList<TimedActivity>) mActivities);
+        outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        outState.putString(
+                getString(R.string.key_new_name_string),
+                mBinding.etNewActivityName.getText().toString());
+        outState.putString(
+                getString(R.string.key_new_category_string),
+                mBinding.etNewActivityCategory.getText().toString());
+
     }
 }
