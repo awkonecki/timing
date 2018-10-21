@@ -54,6 +54,14 @@ public class SelectActivity extends AppCompatActivity {
             return mActivities.size();
         }
 
+        public void unSelect() {
+            if (mSelectedView != null) {
+                mSelectedView.setBackgroundColor(0xFFFFFF);
+                mSelectedActivity = null;
+                mSelectedView = null;
+            }
+        }
+
         private class SelectActivityView extends RecyclerView.ViewHolder implements View.OnClickListener {
             private final TimedActivityElementBinding elementBinding;
 
@@ -160,6 +168,18 @@ public class SelectActivity extends AppCompatActivity {
                         LinearLayoutManager.VERTICAL,
                         false));
         mBinding.rvSaveTimeActivities.setHasFixedSize(true);
+
+        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBinding.tbUseNewActivityToggle.isChecked()) {
+                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
+                    mSelectedActivity = new TimedActivity(
+                            mBinding.etNewActivityName.getText().toString(),
+                            mBinding.etNewActivityCategory.getText().toString());
+                }
+            }
+        });
     }
 
     @Override
