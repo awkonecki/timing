@@ -147,6 +147,7 @@ public class SelectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
+        mBinding.tbUseNewActivityToggle.setChecked(false);
 
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(
