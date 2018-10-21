@@ -18,6 +18,7 @@ import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 import com.nebo.timing.databinding.TimedActivityElementBinding;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SelectActivity extends AppCompatActivity {
@@ -25,6 +26,7 @@ public class SelectActivity extends AppCompatActivity {
     private ActivitySelectActivityBinding mBinding = null;
     private List<TimedActivity> mActivities = new ArrayList<>();
     private TimedActivity mSelectedActivity = null;
+    private HashMap<String, TimedActivity> mMapOfActivities = new HashMap<>();
 
     private class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -160,6 +162,11 @@ public class SelectActivity extends AppCompatActivity {
             }
         }
 
+        // Setup the hash set to aid in making sure unique activities by name.
+        for (TimedActivity activity : mActivities) {
+            mMapOfActivities.put(activity.getName(), activity);
+        }
+
         // setup the view's recyclerview widget
         mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter());
         mBinding.rvSaveTimeActivities.setLayoutManager(
@@ -174,9 +181,14 @@ public class SelectActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (mBinding.tbUseNewActivityToggle.isChecked()) {
                     ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
-                    mSelectedActivity = new TimedActivity(
-                            mBinding.etNewActivityName.getText().toString(),
-                            mBinding.etNewActivityCategory.getText().toString());
+                    String name = mBinding.etNewActivityName.getText().toString();
+                    String category = mBinding.etNewActivityCategory.getText().toString();
+
+                    mSelectedActivity = mMapOfActivities.get(name);
+
+                    if (mSelectedActivity == null) {
+                        mSelectedActivity = new TimedActivity(name, category);
+                    }
                 }
             }
         });
