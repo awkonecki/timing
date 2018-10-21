@@ -99,6 +99,8 @@ public class SelectActivity extends AppCompatActivity {
 
                     v.setBackgroundColor(getColor(R.color.colorAccent));
                     mSelectedView = v;
+
+                    mBinding.tbUseNewActivityToggle.setChecked(false);
                 }
             }
         }
@@ -149,8 +151,10 @@ public class SelectActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(
                     getString(R.string.key_timed_activities));
-            mSelectedActivity = savedInstanceState.getParcelable(
-                    getString(R.string.key_timed_activity));
+            mBinding.etNewActivityName.setText(
+                    savedInstanceState.getString(getString(R.string.key_new_name_string)));
+            mBinding.etNewActivityCategory.setText(
+                    savedInstanceState.getString(getString(R.string.key_new_category_string)));
         }
         else {
             // process intent data.
@@ -199,5 +203,13 @@ public class SelectActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(
                 getString(R.string.key_timed_activities), (ArrayList<TimedActivity>) mActivities);
+        outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        outState.putString(
+                getString(R.string.key_new_name_string),
+                mBinding.etNewActivityName.getText().toString());
+        outState.putString(
+                getString(R.string.key_new_category_string),
+                mBinding.etNewActivityCategory.getText().toString());
+
     }
 }

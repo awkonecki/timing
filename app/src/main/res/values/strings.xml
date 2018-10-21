@@ -23,4 +23,8 @@
     <string name="key_timed_activities" translatable="false">timed activities</string>
     <string name="icon_save_label" translatable="true">Save</string>
     <string name="key_selected_activity" translatable="false">Selected Activity</string>
+    <string name="key_tb_status" translatable="false">Toggle Button Status</string>
+    <string name="key_new_name_string" translatable="false">User Supplied Name</string>
+    <string name="key_new_category_string" translatable="false">User Supplied Category</string>
+    <string name="key_selected_activity_index" translatable="false">Highlighted Activity</string>
 </resources>
