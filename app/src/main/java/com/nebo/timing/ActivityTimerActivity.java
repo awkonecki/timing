@@ -63,7 +63,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         mTimedActivitiesDBRef.push().setValue(activity);
 
         ActivitySession session = new ActivitySession("session");
+        session.addSessionLapTime(500L);
         mActivitySessionsDBRef.push().setValue(session);
+
+        activity.addActivitySession(session);
+        mTimedActivitiesDBRef.push().setValue(activity);
     }
 
     @Override
