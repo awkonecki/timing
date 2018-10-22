@@ -39,6 +39,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
     private Map<String, TimedActivity> mKeyToTimedActivities = new TreeMap<>();
     private Map<String, String> mActivityNameToActivityKey = new HashMap<>();
+    private Map<String, Integer> mActivityKeyToIndex = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
@@ -230,6 +231,13 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
 
                     // TODO @awkonecki notify recyclerview widget
+                    if (mBinding.rvTimedActivities.getAdapter() != null) {
+                        ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                                .addNewTimedActivity(timedActivity);
+                        mTimedActivities.add(timedActivity);
+                        mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
+                    }
+
                     // TODO @awkonecki update graph
                 }
             }
@@ -237,6 +245,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Log.d("Testing", "on child changed " + dataSnapshot.toString());
+                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+
+                if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
+                    ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                            .updateAtIndex(
+                                    mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
+                                    timedActivity);
+                }
             }
 
             @Override
