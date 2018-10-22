@@ -43,6 +43,9 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private DatabaseReference mTimedActivitiesDBRef;
     private DatabaseReference mActivitySessionsDBRef;
 
+    private long [] sessionLapTimes = null;
+    private long sessionTotalTime = 0L;
+
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
@@ -82,15 +85,38 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     Bundle bundle = new Bundle();
                     if (data != null) {
                         bundle = data.getExtras();
-                    }
 
-                    // Handle the data for the for the individual laps.
-                    // need to handle assigning it to an activity (new / old).
-                    selectActivity();
+                        if (bundle != null) {
+                            sessionTotalTime = bundle.getLong(
+                                    getString(R.string.key_total_time),
+                                    0L);
+                            sessionLapTimes = bundle.getLongArray(
+                                    getString(R.string.key_lap_times));
+
+                            if (sessionTotalTime != 0L) {
+                                // Handle the data for the for the individual laps.
+                                // need to handle assigning it to an activity (new / old).
+                                selectActivity();
+                            }
+                            else {
+                                // Clear otherwise.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
+                    }
                 }
                 break;
             case SELECT_ACTIVITY:
                 Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned.");
+                if (resultCode == RESULT_OK) {
+                    Bundle bundle = new Bundle();
+                    if (data != null) {
+                        bundle = data.getExtras();
+                    }
+
+
+                }
                 break;
         }
     }
