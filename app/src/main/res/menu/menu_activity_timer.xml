@@ -7,4 +7,9 @@
         android:title="@string/menu_launch_stop_watch"
         app:showAsAction="ifRoom"
         android:icon="@android:drawable/ic_lock_idle_alarm"/>
+
+    <item android:id="@+id/mi_firebase_save"
+        android:title="@string/icon_save_label"
+        app:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_save"/>
 </menu>

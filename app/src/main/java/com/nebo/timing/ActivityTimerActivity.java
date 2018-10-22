@@ -3,6 +3,7 @@ package com.nebo.timing;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +16,12 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
@@ -22,15 +29,26 @@ import com.nebo.timing.util.ActivityTimerUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ActivityTimerActivity extends AppCompatActivity implements
     TimedActivityAdapter.OnTimedActivityClick {
 
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
+    private Map<String, TimedActivity> mKeyToTimedActivities = new TreeMap<>();
+    private Map<String, String> mActivityNameToActivityKey = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
+
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mTimedActivitiesDBRef;
+
+    private long [] sessionLapTimes = null;
+    private long sessionTotalTime = 0L;
+    private TimedActivity mSelectedActivity = null;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
@@ -47,6 +65,56 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         startActivityForResult(intent, SELECT_ACTIVITY);
     }
 
+    private void saveFirebaseEntry() {
+        // create a new session
+        ActivitySession session = new ActivitySession("Session");
+        for (long sessionLap : sessionLapTimes) {
+            session.addSessionLapTime(sessionLap);
+        }
+
+        TimedActivity timedActivity = null;
+
+        if (mActivityNameToActivityKey.get(mSelectedActivity.getName()) != null) {
+            timedActivity = mKeyToTimedActivities.get(
+                    mActivityNameToActivityKey.get(mSelectedActivity.getName()));
+        }
+
+        // now need to see if this will be a new entry or an update to an already existing timed
+        // activity.
+        if (timedActivity == null) {
+            // new entry.
+            timedActivity = new TimedActivity(
+                    mSelectedActivity.getName(),
+                    mSelectedActivity.getCategory());
+
+            timedActivity.addActivitySession(session);
+            mTimedActivitiesDBRef.push().setValue(timedActivity);
+        }
+        else {
+            // update existing.
+
+            // 1. need to go into the location into the firebase database within the
+            // timed-activities location.
+            DatabaseReference dbref = mTimedActivitiesDBRef
+                    .child(mActivityNameToActivityKey.get(timedActivity.getName()));
+
+            // 2. add the new session to the activity.
+            timedActivity.addActivitySession(session);
+
+            // 3. get the list and update with a map.
+            Map<String, Object> updateOfSessions = new HashMap<>();
+            updateOfSessions.put(getString(
+                    R.string.firebase_database_activity_sessions),
+                    timedActivity.getActivitySessions());
+            updateOfSessions.put(
+                    getString(R.string.firebase_database_activity_total_elapsed_time),
+                    timedActivity.getTotalElapsedTime());
+
+            // 4. update
+            dbref.updateChildren(updateOfSessions);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -59,15 +127,53 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     Bundle bundle = new Bundle();
                     if (data != null) {
                         bundle = data.getExtras();
-                    }
 
-                    // Handle the data for the for the individual laps.
-                    // need to handle assigning it to an activity (new / old).
-                    selectActivity();
+                        if (bundle != null) {
+                            sessionTotalTime = bundle.getLong(
+                                    getString(R.string.key_total_time),
+                                    0L);
+                            sessionLapTimes = bundle.getLongArray(
+                                    getString(R.string.key_lap_times));
+
+                            if (sessionTotalTime != 0L) {
+                                // Handle the data for the for the individual laps.
+                                // need to handle assigning it to an activity (new / old).
+                                selectActivity();
+                            }
+                            else {
+                                // Clear otherwise.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
+                    }
                 }
                 break;
             case SELECT_ACTIVITY:
                 Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned.");
+                if (resultCode == RESULT_OK) {
+                    Bundle bundle = new Bundle();
+                    if (data != null) {
+                        bundle = data.getExtras();
+
+                        if (bundle != null) {
+                            mSelectedActivity = bundle.getParcelable(
+                                    getString(R.string.key_selected_activity));
+
+                            if (mSelectedActivity != null) {
+                                saveFirebaseEntry();
+                            }
+                            else {
+                                // Clear otherwise, not allowing re-selection of activity with the
+                                // previous recorded time.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
+                    }
+
+
+                }
                 break;
         }
     }
@@ -89,6 +195,9 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 case R.id.mi_stopwatch:
                     onStopWatchClick();
                     break;
+                case R.id.mi_firebase_save:
+                    saveFirebaseEntry();
+                    break;
             }
         }
 
@@ -101,16 +210,43 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
 
-        // Static data
-        // TODO @awkonecki remove later
-        mTimedActivities.clear();
-        mTimedActivities = ActivityTimerUtils.generateActivities(new String [] {
-                "Chatper 4",
-                "Chapter 5",
-                "Chapter 6",
-                "Chapter 7",
-                "Chapter 8",
-                "Going to Work"
+        // 1. get the firebase instance
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+
+        // 2. get the firebase reference to the desired child
+        mTimedActivitiesDBRef = mFirebaseDatabase
+                .getReference()
+                .child(getString(R.string.firebase_database_timed_activities));
+
+        // 3. add a child to handle events
+        mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
+            // Equal to an Insert / Create
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+                if (timedActivity != null) {
+                    Log.d("Testing", "had child added " + dataSnapshot.toString());
+                    mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
+                    mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
+
+                    // TODO @awkonecki notify recyclerview widget
+                    // TODO @awkonecki update graph
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Log.d("Testing", "on child changed " + dataSnapshot.toString());
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
 
         if (savedInstanceState != null) {

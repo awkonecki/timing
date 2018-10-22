@@ -63,20 +63,6 @@ public class ActivitySession implements Parcelable {
         return new ArrayList<>(this.sessionLapTimes);
     }
 
-    public void setLabels(String [] labels) {
-        if (labels != null) {
-            for (String label : labels) {
-                this.labels.add(label);
-            }
-        }
-    }
-
-    public String [] getLabels() {
-        String [] result = new String [this.labels.size()];
-        result = this.labels.toArray(result);
-        return result;
-    }
-
     public static final Creator<ActivitySession> CREATOR = new Creator<ActivitySession>() {
         @Override
         public ActivitySession createFromParcel(Parcel source) {

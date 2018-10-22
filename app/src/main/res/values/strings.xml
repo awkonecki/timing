@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Timing</string>
     <string name="firebase_database_timed_activities" translatable="false">timed-activities</string>
+    <string name="firebase_database_activity_session" translatable="false">activity-sessions</string>
     <string name="default_time" translatable="false">00:00:00.000</string>
     <string name="start" translatable="true">Start</string>
     <string name="stop" translatable="true">Stop</string>
@@ -27,4 +28,6 @@
     <string name="key_new_name_string" translatable="false">User Supplied Name</string>
     <string name="key_new_category_string" translatable="false">User Supplied Category</string>
     <string name="key_selected_activity_index" translatable="false">Highlighted Activity</string>
+    <string name="firebase_database_activity_sessions" translatable="false">activitySessions</string>
+    <string name="firebase_database_activity_total_elapsed_time" translatable="false">totalElapsedTime</string>
 </resources>
