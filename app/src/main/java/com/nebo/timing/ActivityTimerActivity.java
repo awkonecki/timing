@@ -45,6 +45,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     private long [] sessionLapTimes = null;
     private long sessionTotalTime = 0L;
+    private TimedActivity mSelectedActivity = null;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
@@ -62,6 +63,16 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void saveFirebaseEntry() {
+        // create a new session
+        ActivitySession session = new ActivitySession("Session");
+        for (long sessionLap : sessionLapTimes) {
+            session.addSessionLapTime(sessionLap);
+        }
+
+        mSelectedActivity.addActivitySession(session);
+        mTimedActivitiesDBRef.push().setValue(mSelectedActivity);
+
+        /*
         TimedActivity activity = new TimedActivity("workout", "helping");
         mTimedActivitiesDBRef.push().setValue(activity);
 
@@ -71,6 +82,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         activity.addActivitySession(session);
         mTimedActivitiesDBRef.push().setValue(activity);
+        */
     }
 
     @Override
@@ -113,6 +125,21 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     Bundle bundle = new Bundle();
                     if (data != null) {
                         bundle = data.getExtras();
+
+                        if (bundle != null) {
+                            mSelectedActivity = bundle.getParcelable(
+                                    getString(R.string.key_selected_activity));
+
+                            if (mSelectedActivity != null) {
+                                saveFirebaseEntry();
+                            }
+                            else {
+                                // Clear otherwise, not allowing re-selection of activity with the
+                                // previous recorded time.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
                     }
 
 
