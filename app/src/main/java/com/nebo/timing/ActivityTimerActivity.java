@@ -29,19 +29,22 @@ import com.nebo.timing.util.ActivityTimerUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ActivityTimerActivity extends AppCompatActivity implements
     TimedActivityAdapter.OnTimedActivityClick {
 
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
+    private Map<String, TimedActivity> mKeyToTimedActivities = new TreeMap<>();
+    private Map<String, String> mActivityNameToActivityKey = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mTimedActivitiesDBRef;
-    private DatabaseReference mActivitySessionsDBRef;
 
     private long [] sessionLapTimes = null;
     private long sessionTotalTime = 0L;
@@ -69,8 +72,30 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             session.addSessionLapTime(sessionLap);
         }
 
-        mSelectedActivity.addActivitySession(session);
-        mTimedActivitiesDBRef.push().setValue(mSelectedActivity);
+        TimedActivity timedActivity = null;
+
+        if (mActivityNameToActivityKey.get(mSelectedActivity.getName()) != null) {
+            timedActivity = mKeyToTimedActivities.get(
+                    mActivityNameToActivityKey.get(mSelectedActivity.getName()));
+        }
+
+        // now need to see if this will be a new entry or an update to an already existing timed
+        // activity.
+        if (timedActivity == null) {
+            // new entry.
+            timedActivity = new TimedActivity(
+                    mSelectedActivity.getName(),
+                    mSelectedActivity.getCategory());
+
+            timedActivity.addActivitySession(session);
+            mTimedActivitiesDBRef.push().setValue(timedActivity);
+        }
+        else {
+            // update existing.
+
+            timedActivity.addActivitySession(session);
+            // mTimedActivitiesDBRef.update();
+        }
 
         /*
         TimedActivity activity = new TimedActivity("workout", "helping");
@@ -188,17 +213,20 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 .getReference()
                 .child(getString(R.string.firebase_database_timed_activities));
 
-        mActivitySessionsDBRef = mFirebaseDatabase
-                .getReference()
-                .child(getString(R.string.firebase_database_activity_session));
-
         // 3. add a child to handle events
         mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
+            // Equal to an Insert / Create
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                // Log.d("ActivityTimerActivity", "onChildAdded " + dataSnapshot.getValue(TimedActivityDetailActivity.class).getActivityName());
+                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+                if (timedActivity != null) {
+                    Log.d("Testing", "had child added " + dataSnapshot.toString());
+                    mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
+                    mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
 
-                // Will need to do something with the data.
+                    // TODO @awkonecki notify recyclerview widget
+                    // TODO @awkonecki update graph
+                }
             }
 
             @Override
@@ -212,45 +240,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
-
-        mActivitySessionsDBRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-        // Static data
-        // TODO @awkonecki remove later
-        mTimedActivities.clear();
-        mTimedActivities = ActivityTimerUtils.generateActivities(new String [] {
-                "Chatper 4",
-                "Chapter 5",
-                "Chapter 6",
-                "Chapter 7",
-                "Chapter 8",
-                "Going to Work"
         });
 
         if (savedInstanceState != null) {
