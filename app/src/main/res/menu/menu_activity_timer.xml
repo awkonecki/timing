@@ -8,8 +8,7 @@
         app:showAsAction="ifRoom"
         android:icon="@android:drawable/ic_lock_idle_alarm"/>
 
-    <item android:id="@+id/mi_firebase_save"
-        android:title="@string/icon_save_label"
-        app:showAsAction="ifRoom"
-        android:icon="@android:drawable/ic_menu_save"/>
+    <item android:id="@+id/mi_sign_out"
+        android:title="@string/mi_sign_out"
+        app:showAsAction="ifRoom" />
 </menu>

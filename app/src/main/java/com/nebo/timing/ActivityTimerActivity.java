@@ -13,10 +13,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.firebase.ui.auth.AuthUI;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,6 +32,7 @@ import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,8 @@ import java.util.TreeMap;
 
 public class ActivityTimerActivity extends AppCompatActivity implements
     TimedActivityAdapter.OnTimedActivityClick {
+
+    private String TAG = "ActivityTimerActivity-DEBUG";
 
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
@@ -44,6 +51,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
+    public static final int RC_SIGN_IN = 3;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mTimedActivitiesDBRef;
@@ -51,6 +59,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private long [] sessionLapTimes = null;
     private long sessionTotalTime = 0L;
     private TimedActivity mSelectedActivity = null;
+
+    private String mCurrentUser = null;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
@@ -197,8 +209,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 case R.id.mi_stopwatch:
                     onStopWatchClick();
                     break;
-                case R.id.mi_firebase_save:
-                    saveFirebaseEntry();
+                case R.id.mi_sign_out:
+                    AuthUI.getInstance()
+                            .signOut(this)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    finish();
+                                }
+                            });
                     break;
             }
         }
@@ -269,6 +287,39 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+
+        // 1. setup the firebase auth instance.
+        mFirebaseAuth = FirebaseAuth.getInstance();
+
+        // 2. Create the Auth State listener.
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                Log.d(TAG, "onAuthStateChanged.");
+
+                if (firebaseAuth.getCurrentUser() == null) {
+                    Log.d(TAG, "onAuthStateChanged - null user");
+                    // No one is signed-in
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setIsSmartLockEnabled(false)
+                                    .setAvailableProviders(Arrays.asList(
+                                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                            new AuthUI.IdpConfig.EmailBuilder().build()))
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+                else {
+                    // someone is already sign-in
+                    Log.d(TAG, "onAuthStateChanged - valid user");
+                }
+
+            }
+        };
+
+        // 3. Add to the auth instance.
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
 
         if (savedInstanceState != null) {
 
