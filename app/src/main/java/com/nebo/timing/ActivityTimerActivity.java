@@ -239,6 +239,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     }
 
                     // TODO @awkonecki update graph
+                    buildGraph();
                 }
             }
 
@@ -253,6 +254,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
                                     timedActivity);
                 }
+
+                buildGraph();
             }
 
             @Override
