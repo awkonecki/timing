@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
@@ -239,6 +240,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     }
 
                     // TODO @awkonecki update graph
+                    hideEmtpy();
                     buildGraph();
                 }
             }
@@ -254,7 +256,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
                                     timedActivity);
                 }
-
+                hideEmtpy();
                 buildGraph();
             }
 
@@ -287,8 +289,29 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 false));
         mBinding.rvTimedActivities.setHasFixedSize(true);
 
-        // Population of the Pie chart based on previously stored data.
-        buildGraph();
+        if (mTimedActivities.isEmpty()) {
+            showEmpty();
+        }
+        else {
+            // Population of the Pie chart based on previously stored data.
+            buildGraph();
+        }
+    }
+
+    private void showEmpty() {
+        mBinding.rvTimedActivities.setVisibility(View.GONE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.GONE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvEmpty.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmtpy() {
+        mBinding.tvEmpty.setVisibility(View.GONE);
+        mBinding.rvTimedActivities.setVisibility(View.VISIBLE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.VISIBLE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.VISIBLE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.VISIBLE);
     }
 
     private void buildGraph() {
