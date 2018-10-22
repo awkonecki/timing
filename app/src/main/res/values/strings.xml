@@ -28,4 +28,6 @@
     <string name="key_new_name_string" translatable="false">User Supplied Name</string>
     <string name="key_new_category_string" translatable="false">User Supplied Category</string>
     <string name="key_selected_activity_index" translatable="false">Highlighted Activity</string>
+    <string name="firebase_database_activity_sessions" translatable="false">activitySessions</string>
+    <string name="firebase_database_activity_total_elapsed_time" translatable="false">totalElapsedTime</string>
 </resources>

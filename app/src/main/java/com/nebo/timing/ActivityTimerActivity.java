@@ -93,21 +93,26 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         else {
             // update existing.
 
+            // 1. need to go into the location into the firebase database within the
+            // timed-activities location.
+            DatabaseReference dbref = mTimedActivitiesDBRef
+                    .child(mActivityNameToActivityKey.get(timedActivity.getName()));
+
+            // 2. add the new session to the activity.
             timedActivity.addActivitySession(session);
-            // mTimedActivitiesDBRef.update();
+
+            // 3. get the list and update with a map.
+            Map<String, Object> updateOfSessions = new HashMap<>();
+            updateOfSessions.put(getString(
+                    R.string.firebase_database_activity_sessions),
+                    timedActivity.getActivitySessions());
+            updateOfSessions.put(
+                    getString(R.string.firebase_database_activity_total_elapsed_time),
+                    timedActivity.getTotalElapsedTime());
+
+            // 4. update
+            dbref.updateChildren(updateOfSessions);
         }
-
-        /*
-        TimedActivity activity = new TimedActivity("workout", "helping");
-        mTimedActivitiesDBRef.push().setValue(activity);
-
-        ActivitySession session = new ActivitySession("session");
-        session.addSessionLapTime(500L);
-        mActivitySessionsDBRef.push().setValue(session);
-
-        activity.addActivitySession(session);
-        mTimedActivitiesDBRef.push().setValue(activity);
-        */
     }
 
     @Override
@@ -230,7 +235,9 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Log.d("Testing", "on child changed " + dataSnapshot.toString());
+            }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
