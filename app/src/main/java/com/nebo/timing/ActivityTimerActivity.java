@@ -3,6 +3,7 @@ package com.nebo.timing;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +16,11 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
@@ -32,6 +38,9 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
 
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mDatabaseReference;
+
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
@@ -45,6 +54,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 (ArrayList<TimedActivity>) mTimedActivities);
         intent.putExtras(bundle);
         startActivityForResult(intent, SELECT_ACTIVITY);
+    }
+
+    private void saveFirebaseEntry() {
+        TimedActivity activity = new TimedActivity("workout", "helping");
+        mDatabaseReference.push().setValue(activity);
     }
 
     @Override
@@ -89,6 +103,9 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 case R.id.mi_stopwatch:
                     onStopWatchClick();
                     break;
+                case R.id.mi_firebase_save:
+                    saveFirebaseEntry();
+                    break;
             }
         }
 
@@ -100,6 +117,36 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
+
+        // 1. get the firebase instance
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+
+        // 2. get the firebase reference to the desired child
+        mDatabaseReference = mFirebaseDatabase
+                .getReference()
+                .child(getString(R.string.firebase_database_timed_activities));
+
+        // 3. add a child to handle events
+        mDatabaseReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                // Log.d("ActivityTimerActivity", "onChildAdded " + dataSnapshot.getValue(TimedActivityDetailActivity.class).getActivityName());
+
+                // Will need to do something with the data.
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
 
         // Static data
         // TODO @awkonecki remove later
