@@ -21,6 +21,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
@@ -39,7 +40,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     public static final int SELECT_ACTIVITY = 2;
 
     private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference mDatabaseReference;
+    private DatabaseReference mTimedActivitiesDBRef;
+    private DatabaseReference mActivitySessionsDBRef;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
@@ -58,7 +60,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     private void saveFirebaseEntry() {
         TimedActivity activity = new TimedActivity("workout", "helping");
-        mDatabaseReference.push().setValue(activity);
+        mTimedActivitiesDBRef.push().setValue(activity);
+
+        ActivitySession session = new ActivitySession("session");
+        mActivitySessionsDBRef.push().setValue(session);
     }
 
     @Override
@@ -122,12 +127,16 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         mFirebaseDatabase = FirebaseDatabase.getInstance();
 
         // 2. get the firebase reference to the desired child
-        mDatabaseReference = mFirebaseDatabase
+        mTimedActivitiesDBRef = mFirebaseDatabase
                 .getReference()
                 .child(getString(R.string.firebase_database_timed_activities));
 
+        mActivitySessionsDBRef = mFirebaseDatabase
+                .getReference()
+                .child(getString(R.string.firebase_database_activity_session));
+
         // 3. add a child to handle events
-        mDatabaseReference.addChildEventListener(new ChildEventListener() {
+        mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 // Log.d("ActivityTimerActivity", "onChildAdded " + dataSnapshot.getValue(TimedActivityDetailActivity.class).getActivityName());
@@ -146,6 +155,33 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
+
+        mActivitySessionsDBRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
         });
 
         // Static data

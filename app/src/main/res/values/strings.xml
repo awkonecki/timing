@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Timing</string>
     <string name="firebase_database_timed_activities" translatable="false">timed-activities</string>
+    <string name="firebase_database_activity_session" translatable="false">activity-sessions</string>
     <string name="default_time" translatable="false">00:00:00.000</string>
     <string name="start" translatable="true">Start</string>
     <string name="stop" translatable="true">Stop</string>
