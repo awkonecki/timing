@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
@@ -39,6 +40,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
     private Map<String, TimedActivity> mKeyToTimedActivities = new TreeMap<>();
     private Map<String, String> mActivityNameToActivityKey = new HashMap<>();
+    private Map<String, Integer> mActivityKeyToIndex = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
@@ -230,13 +232,32 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
 
                     // TODO @awkonecki notify recyclerview widget
+                    if (mBinding.rvTimedActivities.getAdapter() != null) {
+                        ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                                .addNewTimedActivity(timedActivity);
+                        mTimedActivities.add(timedActivity);
+                        mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
+                    }
+
                     // TODO @awkonecki update graph
+                    hideEmtpy();
+                    buildGraph();
                 }
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Log.d("Testing", "on child changed " + dataSnapshot.toString());
+                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+
+                if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
+                    ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                            .updateAtIndex(
+                                    mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
+                                    timedActivity);
+                }
+                hideEmtpy();
+                buildGraph();
             }
 
             @Override
@@ -268,8 +289,29 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 false));
         mBinding.rvTimedActivities.setHasFixedSize(true);
 
-        // Population of the Pie chart based on previously stored data.
-        buildGraph();
+        if (mTimedActivities.isEmpty()) {
+            showEmpty();
+        }
+        else {
+            // Population of the Pie chart based on previously stored data.
+            buildGraph();
+        }
+    }
+
+    private void showEmpty() {
+        mBinding.rvTimedActivities.setVisibility(View.GONE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.GONE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvEmpty.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmtpy() {
+        mBinding.tvEmpty.setVisibility(View.GONE);
+        mBinding.rvTimedActivities.setVisibility(View.VISIBLE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.VISIBLE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.VISIBLE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.VISIBLE);
     }
 
     private void buildGraph() {

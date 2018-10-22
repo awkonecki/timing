@@ -34,6 +34,18 @@ public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.View
         mTimedActivityClick = timedActivityClick;
     }
 
+    public void addNewTimedActivity(TimedActivity timedActivity) {
+        mTimedActivities.add(timedActivity);
+        notifyDataSetChanged();
+    }
+
+    public void updateAtIndex(int index, TimedActivity timedActivity) {
+        if (index >= 0 && index < mTimedActivities.size()) {
+            mTimedActivities.set(index, timedActivity);
+            notifyItemChanged(index);
+        }
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
