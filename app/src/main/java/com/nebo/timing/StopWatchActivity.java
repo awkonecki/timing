@@ -12,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.nebo.timing.data.StopWatch;
+import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityStopwatchBinding;
 import com.nebo.timing.ui.ElapsedTimeFragment;
 import com.nebo.timing.ui.LapTimesFragment;
@@ -29,6 +30,7 @@ public class StopWatchActivity extends AppCompatActivity implements
     private ActivityStopwatchBinding mBinding = null;
     private StopWatch mStopWatch = null;
     private List<Long> mLaps = null;
+    private List<TimedActivity> mTimedActivities = new ArrayList<>();
 
     private void createLap() {
         LapTimesFragment lapTimesFragment = (LapTimesFragment) getSupportFragmentManager()
@@ -94,6 +96,9 @@ public class StopWatchActivity extends AppCompatActivity implements
 
         bundle.putLong(getString(R.string.key_total_time), totalTime);
         bundle.putLongArray(getString(R.string.key_lap_times), lapsToSave);
+        bundle.putParcelableArrayList(
+                getString(R.string.key_timed_activities),
+                (ArrayList<TimedActivity>) mTimedActivities);
 
         Intent intent = new Intent();
         intent.putExtras(bundle);
@@ -150,6 +155,10 @@ public class StopWatchActivity extends AppCompatActivity implements
                     mStopWatch.getState().getStateValue());
             outState.putLongArray(getString(R.string.key_lap_times), times);
         }
+
+        outState.putParcelableArrayList(
+                getString(R.string.key_timed_activities),
+                (ArrayList<TimedActivity>) mTimedActivities);
     }
 
     @Override
@@ -185,9 +194,21 @@ public class StopWatchActivity extends AppCompatActivity implements
 
             stopWatchState = savedInstanceState.getInt(getString(R.string.key_stopwatch_state),
                     StopWatch.sSTOP_STATE_VALUE);
+
+            mTimedActivities = savedInstanceState.
+                    getParcelableArrayList(getString(R.string.key_timed_activities));
         }
         else {
             // Check intent data
+            Bundle bundle = getIntent().getExtras();
+            if (bundle != null) {
+                mTimedActivities = bundle.
+                        getParcelableArrayList(getString(R.string.key_timed_activities));
+            }
+        }
+
+        if (mTimedActivities == null) {
+            mTimedActivities = new ArrayList<>();
         }
 
         // Create the stopwatch object.

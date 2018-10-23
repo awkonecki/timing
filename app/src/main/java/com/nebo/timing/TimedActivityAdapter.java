@@ -46,6 +46,11 @@ public class TimedActivityAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
     }
 
+    public void clearActivities() {
+        mTimedActivities.clear();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
