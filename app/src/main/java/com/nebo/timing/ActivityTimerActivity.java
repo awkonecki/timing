@@ -69,7 +69,12 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private boolean isClosing = false;
 
     private void onStopWatchClick() {
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(
+                getString(R.string.key_timed_activities),
+                (ArrayList<TimedActivity>) mTimedActivities);
         Intent intent = new Intent(this, StopWatchActivity.class);
+        intent.putExtras(bundle);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
     }
 
@@ -97,10 +102,13 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     mActivityNameToActivityKey.get(mSelectedActivity.getName()));
         }
 
+        Log.d(TAG, "Mapping size " + Integer.toString(mActivityNameToActivityKey.size()));
+
         // now need to see if this will be a new entry or an update to an already existing timed
         // activity.
         if (timedActivity == null) {
             // new entry.
+            Log.d(TAG, "new");
             timedActivity = new TimedActivity(
                     mSelectedActivity.getName(),
                     mSelectedActivity.getCategory(),
@@ -111,15 +119,15 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         }
         else {
             // update existing.
-
+            Log.d(TAG, "First");
             // 1. need to go into the location into the firebase database within the
             // timed-activities location.
             DatabaseReference dbref = mTimedActivitiesDBRef
                     .child(mActivityNameToActivityKey.get(timedActivity.getName()));
-
+            Log.d(TAG, "second");
             // 2. add the new session to the activity.
             timedActivity.addActivitySession(session);
-
+            Log.d(TAG, "third");
             // 3. get the list and update with a map.
             Map<String, Object> updateOfSessions = new HashMap<>();
             updateOfSessions.put(getString(
@@ -128,10 +136,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             updateOfSessions.put(
                     getString(R.string.firebase_database_activity_total_elapsed_time),
                     timedActivity.getTotalElapsedTime());
-
+            Log.d(TAG, "forth");
             // 4. update
             dbref.updateChildren(updateOfSessions);
         }
+        Log.d(TAG, "done");
     }
 
     private void attachDBListener() {
@@ -139,6 +148,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             mDBChildEventListner = new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    Log.d(TAG, "onChildAdded");
                     TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
                     if (timedActivity != null) {
                         mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
@@ -157,6 +167,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    Log.d(TAG, "onChildChanged");
                     TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
 
                     if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
@@ -187,23 +198,32 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     private void detachDBListener() {
         if (mDBChildEventListner != null) {
+            Log.d(TAG, "detachDBListener");
+
             mTimedActivitiesDBRef.removeEventListener(mDBChildEventListner);
             mDBChildEventListner = null;
         }
     }
 
     private void onSignedInInitialize(String user) {
+        Log.d(TAG, "onSignedInInitialize");
         mCurrentUser = user;
         attachDBListener();
     }
 
     private void onSignedOutCleanup() {
+        Log.d(TAG, "onSignedOutCleanup");
+
         mCurrentUser = null;
         mTimedActivities.clear();
         mKeyToTimedActivities.clear();
         mActivityNameToActivityKey.clear();
         mActivityKeyToIndex.clear();
         detachDBListener();
+
+        if (mBinding.rvTimedActivities.getAdapter() != null) {
+            ((TimedActivityAdapter)mBinding.rvTimedActivities.getAdapter()).clearActivities();
+        }
     }
 
     private void createAuthStateListener() {
@@ -294,6 +314,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "onActivityResult");
 
         switch (requestCode) {
             case STOPWATCH_ACTIVITY:
@@ -309,6 +330,13 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     0L);
                             sessionLapTimes = bundle.getLongArray(
                                     getString(R.string.key_lap_times));
+
+                            mTimedActivities = bundle.
+                                    getParcelableArrayList(getString(R.string.key_timed_activities));
+
+                            if (mTimedActivities == null) {
+                                mTimedActivities = new ArrayList<>();
+                            }
 
                             if (sessionTotalTime != 0L) {
                                 // Handle the data for the for the individual laps.
@@ -409,7 +437,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         // 1. setup the firebase auth instance.
         mFirebaseAuth = FirebaseAuth.getInstance();
 
-        attachDBListener();
+        // attachDBListener();
 
         // Setup of the UI recyclerview widget
         mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
@@ -452,25 +480,22 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        /*
+
         Log.d(TAG, "onResume");
         if (mAuthStateListener == null) {
             createAuthStateListener();
+            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
         }
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        */
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        /*
         Log.d(TAG, "onPause");
         if (mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
             mAuthStateListener = null;
         }
         onSignedOutCleanup();
-        */
     }
 }
