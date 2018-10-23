@@ -58,7 +58,6 @@ public class StopWatchActivity extends AppCompatActivity implements
                 .findFragmentById(mBinding.rlLapTimes.getId());
 
         if (elapsedTimeFragment != null) {
-            Log.d("initializeFragments", "should be updating");
             elapsedTimeFragment.updateElapsedTime(StopWatch.buildTimeStamp(baseTime));
         }
         else {
@@ -124,7 +123,6 @@ public class StopWatchActivity extends AppCompatActivity implements
         if (mStopWatch != null) {
             mStopWatch.unRegisterCallback();
         }
-        Log.d("StopWatchActivity", "onPause");
     }
 
     @Override
@@ -133,28 +131,11 @@ public class StopWatchActivity extends AppCompatActivity implements
         if (mStopWatch != null) {
             mStopWatch.registerCallback(this);
         }
-        Log.d("StopWatchActivity", "onResume");
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d("StopWatchActivity", "onStop");
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d("StopWatchActivity", "onDestroy");
-
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.d("StopWatchActivity", "onSaveInstanceState");
         long [] times = new long [mLaps.size()];
 
         int index = 0;
@@ -174,8 +155,6 @@ public class StopWatchActivity extends AppCompatActivity implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Log.d("StopWatchActivity", "onCreate");
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
         long baseTime = 0L;
@@ -268,8 +247,6 @@ public class StopWatchActivity extends AppCompatActivity implements
 
     @Override
     public void tickEvent(long milliSecondsElapsed) {
-        Log.d("StopWatchActivity", "tickEvent");
-
         Long lastLapTime = 0L;
         String totalTimeDisplay = null, lapTimeDisplay = null;
 

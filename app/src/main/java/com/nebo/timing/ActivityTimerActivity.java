@@ -213,7 +213,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                     if (!isClosing) {
                         if (firebaseAuth.getCurrentUser() == null) {
-                            Log.d(TAG, "onAuthStateChanged - null user");
                             // No one is signed-in
                             startActivityForResult(
                                     AuthUI.getInstance()
@@ -226,7 +225,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     RC_SIGN_IN);
                         } else {
                             // someone is already sign-in
-                            Log.d(TAG, "onAuthStateChanged - valid user");
                             onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
                         }
                     }
