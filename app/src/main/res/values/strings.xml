@@ -39,4 +39,10 @@
 
     <string name="fab_start_stop_description" translatable="true">Button to allow for starting and stopping the stopwatch.</string>
     <string name="fab_reset_lap_description" translatable="true">Button to allow for reseting the current time and creating a new lap.</string>
+    <string name="image_play_description" translatable="true">Press to start the stopwatch.</string>
+    <string name="image_pause_description" translatable="true">Press to pause the stopwatch.</string>
+    <string name="image_stop_description" translatable="true">Press to stop the stopwatch.</string>
+    <string name="image_reset_description" translatable="true">Press to reset the stopwatch.</string>
+    <string name="image_lap_description" translatable="true">Press to create a lap.</string>
+
 </resources>
