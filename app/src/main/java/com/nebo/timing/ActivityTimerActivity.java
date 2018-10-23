@@ -294,13 +294,12 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("ActivityTimerActivity", "onActivityResult " + Integer.toString(requestCode) + " " + Integer.toString(resultCode));
 
         switch (requestCode) {
             case STOPWATCH_ACTIVITY:
                 if (resultCode == RESULT_OK) {
                     // Get the data that is returned via the intent.
-                    Bundle bundle = new Bundle();
+                    Bundle bundle = null;
                     if (data != null) {
                         bundle = data.getExtras();
 
@@ -314,7 +313,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                             if (sessionTotalTime != 0L) {
                                 // Handle the data for the for the individual laps.
                                 // need to handle assigning it to an activity (new / old).
-                                selectActivity(); }
+                                selectActivity();
+                            }
                             else {
                                 // Clear otherwise.
                                 sessionTotalTime = 0L;
@@ -325,9 +325,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 }
                 break;
             case SELECT_ACTIVITY:
-                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned.");
                 if (resultCode == RESULT_OK) {
-                    Bundle bundle = new Bundle();
+                    Bundle bundle = null;
                     if (data != null) {
                         bundle = data.getExtras();
 
@@ -336,6 +335,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     getString(R.string.key_selected_activity));
 
                             if (mSelectedActivity != null) {
+                                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned " + mSelectedActivity.getName() + " " + mSelectedActivity.getCategory());
                                 saveFirebaseEntry();
                             }
                             else {

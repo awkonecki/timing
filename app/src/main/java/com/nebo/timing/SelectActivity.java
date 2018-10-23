@@ -109,6 +109,13 @@ public class SelectActivity extends AppCompatActivity {
     private void saveSelectedAndFinish() {
         Bundle bundle = new Bundle();
         if (mSelectedActivity != null) {
+            if (mBinding.tbUseNewActivityToggle.isChecked()) {
+                mSelectedActivity = new TimedActivity(
+                        mBinding.etNewActivityName.getText().toString(),
+                        mBinding.etNewActivityCategory.getText().toString(),
+                        null);
+            }
+
             bundle.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
         }
 
