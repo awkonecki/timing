@@ -16,7 +16,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start|top"
-            app:backgroundTint="@color/colorAccent"/>
+            app:backgroundTint="@color/colorAccent"
+            android:contentDescription="@string/fab_reset_lap_description"/>
 
         <TextView
             android:id="@+id/tv_reset_lap"
@@ -36,7 +37,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|top"
-            app:backgroundTint="@color/colorAccent"/>
+            app:backgroundTint="@color/colorAccent"
+            android:contentDescription="@string/fab_start_stop_description"/>
 
         <TextView
             android:id="@+id/tv_start_stop"
