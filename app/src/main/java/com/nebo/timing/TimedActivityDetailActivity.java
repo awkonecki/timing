@@ -71,10 +71,10 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
             }
 
             public void bind(ActivitySession session) {
-                mBinding.tvActivitySessionDate.setText("Date");
+                mBinding.tvActivitySessionDate.setText(getString(R.string.label_date));
                 mBinding.tvActivitySessionName.setText(session.getName());
                 mBinding.tvActivitySessionTime.setText(StopWatch.buildTimeStamp(session.getTotalTime()));
-                mBinding.tvLabels.setText("Labels");
+                mBinding.tvLabels.setText(getString(R.string.label_labels));
             }
         }
     }

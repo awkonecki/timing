@@ -88,7 +88,9 @@ public class LapTimesFragment extends Fragment {
             }
 
             public void bind(int lapPosition, String lapData) {
-                mBinding.tvLapid.setText("Lap " + Integer.toString(lapPosition));
+                mBinding.tvLapid.setText(String.format(getString(R.string.lap_format),
+                        getString(R.string.label_lap),
+                        Integer.toString(lapPosition)));
                 mBinding.tvLaptime.setText(lapData);
             }
         }
