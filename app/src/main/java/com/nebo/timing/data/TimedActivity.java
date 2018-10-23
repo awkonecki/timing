@@ -13,12 +13,22 @@ public class TimedActivity implements Parcelable {
     private String category = null;
     private long totalElapsedTime = 0L;
     private ArrayList<ActivitySession> activitySessions = new ArrayList<>();
+    private String user = null;
 
     public TimedActivity() {}
 
-    public TimedActivity(String name, String category) {
+    public TimedActivity(String name, String category, String user) {
         this.name = name;
         this.category = category;
+        this.user = user;
+    }
+
+    public String getUser() {
+        return this.user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     public void setTotalElapsedTime(long totalElapsedTime) {

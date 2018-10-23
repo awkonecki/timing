@@ -13,10 +13,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.firebase.ui.auth.AuthUI;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,6 +32,7 @@ import com.nebo.timing.databinding.ActivityTimerActivityBinding;
 import com.nebo.timing.util.ActivityTimerUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,8 @@ import java.util.TreeMap;
 
 public class ActivityTimerActivity extends AppCompatActivity implements
     TimedActivityAdapter.OnTimedActivityClick {
+
+    private String TAG = "ActivityTimerActivity-DEBUG";
 
     private ActivityTimerActivityBinding mBinding = null;
     private List<TimedActivity> mTimedActivities = new ArrayList<>();
@@ -44,6 +51,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int SELECT_ACTIVITY = 2;
+    public static final int RC_SIGN_IN = 3;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mTimedActivitiesDBRef;
@@ -51,6 +59,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private long [] sessionLapTimes = null;
     private long sessionTotalTime = 0L;
     private TimedActivity mSelectedActivity = null;
+
+    private String mCurrentUser = null;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+
+    private ChildEventListener mDBChildEventListner = null;
+
+    private boolean isClosing = false;
 
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
@@ -87,7 +103,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             // new entry.
             timedActivity = new TimedActivity(
                     mSelectedActivity.getName(),
-                    mSelectedActivity.getCategory());
+                    mSelectedActivity.getCategory(),
+                    mCurrentUser);
 
             timedActivity.addActivitySession(session);
             mTimedActivitiesDBRef.push().setValue(timedActivity);
@@ -117,184 +134,102 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("ActivityTimerActivity", "onActivityResult " + Integer.toString(requestCode) + " " + Integer.toString(resultCode));
+    private void attachDBListener() {
+        if (mDBChildEventListner == null) {
+            mDBChildEventListner = new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+                    if (timedActivity != null) {
+                        mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
+                        mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
 
-        switch (requestCode) {
-            case STOPWATCH_ACTIVITY:
-                if (resultCode == RESULT_OK) {
-                    // Get the data that is returned via the intent.
-                    Bundle bundle = new Bundle();
-                    if (data != null) {
-                        bundle = data.getExtras();
-
-                        if (bundle != null) {
-                            sessionTotalTime = bundle.getLong(
-                                    getString(R.string.key_total_time),
-                                    0L);
-                            sessionLapTimes = bundle.getLongArray(
-                                    getString(R.string.key_lap_times));
-
-                            if (sessionTotalTime != 0L) {
-                                // Handle the data for the for the individual laps.
-                                // need to handle assigning it to an activity (new / old).
-                                selectActivity();
-                            }
-                            else {
-                                // Clear otherwise.
-                                sessionTotalTime = 0L;
-                                sessionLapTimes = null;
-                            }
+                        if (mBinding.rvTimedActivities.getAdapter() != null) {
+                            ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                                    .addNewTimedActivity(timedActivity);
+                            mTimedActivities.add(timedActivity);
+                            mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
                         }
+                        hideEmtpy();
+                        buildGraph();
                     }
                 }
-                break;
-            case SELECT_ACTIVITY:
-                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned.");
-                if (resultCode == RESULT_OK) {
-                    Bundle bundle = new Bundle();
-                    if (data != null) {
-                        bundle = data.getExtras();
 
-                        if (bundle != null) {
-                            mSelectedActivity = bundle.getParcelable(
-                                    getString(R.string.key_selected_activity));
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
 
-                            if (mSelectedActivity != null) {
-                                saveFirebaseEntry();
-                            }
-                            else {
-                                // Clear otherwise, not allowing re-selection of activity with the
-                                // previous recorded time.
-                                sessionTotalTime = 0L;
-                                sessionLapTimes = null;
-                            }
-                        }
-                    }
-
-
-                }
-                break;
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.menu_activity_timer, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        super.onOptionsItemSelected(item);
-
-        if (item != null) {
-            switch (item.getItemId()) {
-                case R.id.mi_stopwatch:
-                    onStopWatchClick();
-                    break;
-                case R.id.mi_firebase_save:
-                    saveFirebaseEntry();
-                    break;
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
-
-        // 1. get the firebase instance
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-
-        // 2. get the firebase reference to the desired child
-        mTimedActivitiesDBRef = mFirebaseDatabase
-                .getReference()
-                .child(getString(R.string.firebase_database_timed_activities));
-
-        // 3. add a child to handle events
-        mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
-            // Equal to an Insert / Create
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
-                if (timedActivity != null) {
-                    Log.d("Testing", "had child added " + dataSnapshot.toString());
-                    mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
-                    mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
-
-                    // TODO @awkonecki notify recyclerview widget
-                    if (mBinding.rvTimedActivities.getAdapter() != null) {
+                    if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
                         ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                                .addNewTimedActivity(timedActivity);
-                        mTimedActivities.add(timedActivity);
-                        mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
+                                .updateAtIndex(
+                                        mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
+                                        timedActivity);
                     }
-
-                    // TODO @awkonecki update graph
                     hideEmtpy();
                     buildGraph();
                 }
-            }
 
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Log.d("Testing", "on child changed " + dataSnapshot.toString());
-                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
-                if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
-                    ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                            .updateAtIndex(
-                                    mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
-                                    timedActivity);
                 }
-                hideEmtpy();
-                buildGraph();
-            }
 
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
 
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {}
+            };
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
-
-        if (savedInstanceState != null) {
-
+            mTimedActivitiesDBRef.addChildEventListener(mDBChildEventListner);
         }
-        else {
-            // This is the base activity (main activity) thus do not expect to process data from
-            // intent.
-        }
+    }
 
-        // Setup of the UI recyclerview widget
-        mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
-                this,
-                this,
-                mTimedActivities));
-        mBinding.rvTimedActivities.setLayoutManager(new LinearLayoutManager(
-                this,
-                LinearLayoutManager.VERTICAL,
-                false));
-        mBinding.rvTimedActivities.setHasFixedSize(true);
-
-        if (mTimedActivities.isEmpty()) {
-            showEmpty();
+    private void detachDBListener() {
+        if (mDBChildEventListner != null) {
+            mTimedActivitiesDBRef.removeEventListener(mDBChildEventListner);
+            mDBChildEventListner = null;
         }
-        else {
-            // Population of the Pie chart based on previously stored data.
-            buildGraph();
+    }
+
+    private void onSignedInInitialize(String user) {
+        mCurrentUser = user;
+        attachDBListener();
+    }
+
+    private void onSignedOutCleanup() {
+        mCurrentUser = null;
+        mTimedActivities.clear();
+        mKeyToTimedActivities.clear();
+        mActivityNameToActivityKey.clear();
+        mActivityKeyToIndex.clear();
+        detachDBListener();
+    }
+
+    private void createAuthStateListener() {
+        if (mAuthStateListener == null) {
+            mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (!isClosing) {
+                        if (firebaseAuth.getCurrentUser() == null) {
+                            // No one is signed-in
+                            startActivityForResult(
+                                    AuthUI.getInstance()
+                                            .createSignInIntentBuilder()
+                                            .setIsSmartLockEnabled(false)
+                                            .setAvailableProviders(Arrays.asList(
+                                                    new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                                    new AuthUI.IdpConfig.EmailBuilder().build()))
+                                            .build(),
+                                    RC_SIGN_IN);
+                        } else {
+                            // someone is already sign-in
+                            onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
+                        }
+                    }
+                }
+            };
         }
     }
 
@@ -357,6 +292,152 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case STOPWATCH_ACTIVITY:
+                if (resultCode == RESULT_OK) {
+                    // Get the data that is returned via the intent.
+                    Bundle bundle = null;
+                    if (data != null) {
+                        bundle = data.getExtras();
+
+                        if (bundle != null) {
+                            sessionTotalTime = bundle.getLong(
+                                    getString(R.string.key_total_time),
+                                    0L);
+                            sessionLapTimes = bundle.getLongArray(
+                                    getString(R.string.key_lap_times));
+
+                            if (sessionTotalTime != 0L) {
+                                // Handle the data for the for the individual laps.
+                                // need to handle assigning it to an activity (new / old).
+                                selectActivity();
+                            }
+                            else {
+                                // Clear otherwise.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
+                    }
+                }
+                break;
+            case SELECT_ACTIVITY:
+                if (resultCode == RESULT_OK) {
+                    Bundle bundle = null;
+                    if (data != null) {
+                        bundle = data.getExtras();
+
+                        if (bundle != null) {
+                            mSelectedActivity = bundle.getParcelable(
+                                    getString(R.string.key_selected_activity));
+
+                            if (mSelectedActivity != null) {
+                                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned " + mSelectedActivity.getName() + " " + mSelectedActivity.getCategory());
+                                saveFirebaseEntry();
+                            }
+                            else {
+                                // Clear otherwise, not allowing re-selection of activity with the
+                                // previous recorded time.
+                                sessionTotalTime = 0L;
+                                sessionLapTimes = null;
+                            }
+                        }
+                    }
+
+
+                }
+                break;
+            case RC_SIGN_IN:
+                if (resultCode == RESULT_CANCELED) {
+                    finish();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu_activity_timer, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        if (item != null) {
+            switch (item.getItemId()) {
+                case R.id.mi_stopwatch:
+                    onStopWatchClick();
+                    break;
+                case R.id.mi_sign_out:
+                    isClosing = true;
+                    onSignedOutCleanup();
+                    AuthUI.getInstance()
+                            .signOut(this)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    finish();
+                                }
+                            });
+                    break;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
+
+        // 1. get the firebase instance
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+
+        // 2. get the firebase reference to the desired child
+        mTimedActivitiesDBRef = mFirebaseDatabase
+                .getReference()
+                .child(getString(R.string.firebase_database_timed_activities));
+
+        // 1. setup the firebase auth instance.
+        mFirebaseAuth = FirebaseAuth.getInstance();
+
+        attachDBListener();
+
+        // Setup of the UI recyclerview widget
+        mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
+                this,
+                this,
+                mTimedActivities));
+        mBinding.rvTimedActivities.setLayoutManager(new LinearLayoutManager(
+                this,
+                LinearLayoutManager.VERTICAL,
+                false));
+        mBinding.rvTimedActivities.setHasFixedSize(true);
+
+        if (mTimedActivities.isEmpty()) {
+            showEmpty();
+        }
+        else {
+            // Population of the Pie chart based on previously stored data.
+            buildGraph();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Log.d(TAG, "onSaveInstanceState");
+    }
+
+    @Override
     public void onClick(TimedActivity timedActivity) {
         // Support the launching of the intent to get the timeActivity details.
         Intent intent = new Intent(getApplicationContext(), TimedActivityDetailActivity.class);
@@ -366,5 +447,30 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         intent.putExtras(bundle);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /*
+        Log.d(TAG, "onResume");
+        if (mAuthStateListener == null) {
+            createAuthStateListener();
+        }
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        */
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        /*
+        Log.d(TAG, "onPause");
+        if (mAuthStateListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+            mAuthStateListener = null;
+        }
+        onSignedOutCleanup();
+        */
     }
 }
