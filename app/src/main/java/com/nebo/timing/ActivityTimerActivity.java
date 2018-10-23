@@ -64,6 +64,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
 
+    private ChildEventListener mDBChildEventListner = null;
+
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
@@ -99,7 +101,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             // new entry.
             timedActivity = new TimedActivity(
                     mSelectedActivity.getName(),
-                    mSelectedActivity.getCategory());
+                    mSelectedActivity.getCategory(),
+                    mCurrentUser);
 
             timedActivity.addActivitySession(session);
             mTimedActivitiesDBRef.push().setValue(timedActivity);
@@ -127,6 +130,167 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             // 4. update
             dbref.updateChildren(updateOfSessions);
         }
+    }
+
+    private void attachDBListener() {
+        if (mDBChildEventListner == null) {
+            mDBChildEventListner = new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+                    if (timedActivity != null) {
+                        mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
+                        mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
+
+                        if (mBinding.rvTimedActivities.getAdapter() != null) {
+                            ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                                    .addNewTimedActivity(timedActivity);
+                            mTimedActivities.add(timedActivity);
+                            mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
+                        }
+                        hideEmtpy();
+                        buildGraph();
+                    }
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
+
+                    if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
+                        ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                                .updateAtIndex(
+                                        mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
+                                        timedActivity);
+                    }
+                    hideEmtpy();
+                    buildGraph();
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {}
+            };
+
+            mTimedActivitiesDBRef.addChildEventListener(mDBChildEventListner);
+        }
+    }
+
+    private void detachDBListener() {
+        if (mDBChildEventListner != null) {
+            mTimedActivitiesDBRef.removeEventListener(mDBChildEventListner);
+            mDBChildEventListner = null;
+        }
+    }
+
+    private void onSignedInInitialize(String user) {
+        mCurrentUser = user;
+        attachDBListener();
+    }
+
+    private void onSignedOutCleanup() {
+        mCurrentUser = null;
+        mTimedActivities.clear();
+        mKeyToTimedActivities.clear();
+        mActivityNameToActivityKey.clear();
+        mActivityKeyToIndex.clear();
+        detachDBListener();
+    }
+
+    private void createAuthStateListener() {
+        if (mAuthStateListener == null) {
+            mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (firebaseAuth.getCurrentUser() == null) {
+                        Log.d(TAG, "onAuthStateChanged - null user");
+                        // No one is signed-in
+                        startActivityForResult(
+                                AuthUI.getInstance()
+                                        .createSignInIntentBuilder()
+                                        .setIsSmartLockEnabled(false)
+                                        .setAvailableProviders(Arrays.asList(
+                                                new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                                new AuthUI.IdpConfig.EmailBuilder().build()))
+                                        .build(),
+                                RC_SIGN_IN);
+                    } else {
+                        // someone is already sign-in
+                        Log.d(TAG, "onAuthStateChanged - valid user");
+                        onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
+                    }
+
+                }
+            };
+        }
+
+        // 3. Add to the auth instance.
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+    }
+
+    private void showEmpty() {
+        mBinding.rvTimedActivities.setVisibility(View.GONE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.GONE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.GONE);
+        mBinding.tvEmpty.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmtpy() {
+        mBinding.tvEmpty.setVisibility(View.GONE);
+        mBinding.rvTimedActivities.setVisibility(View.VISIBLE);
+        mBinding.pcActivitiesByCategory.setVisibility(View.VISIBLE);
+        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.VISIBLE);
+        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.VISIBLE);
+    }
+
+    private void buildGraph() {
+        // 1. will need to organzie the current set of timed activities based off of category.
+        HashMap<String, Long> categoryElapsedTimeTotals = new HashMap<>();
+        long totalTime = 0L;
+
+        for (TimedActivity timedActivity : mTimedActivities) {
+            Long currentElapsedTime = categoryElapsedTimeTotals
+                    .getOrDefault(timedActivity.getCategory(), 0L) +
+                    timedActivity.getTotalElapsedTime();
+
+            // Update total
+            totalTime += timedActivity.getTotalElapsedTime();
+
+            // Write back total time for the category.
+            categoryElapsedTimeTotals.put(timedActivity.getCategory(), currentElapsedTime);
+        }
+
+        // 2. the mapping of all the categories with their respective total elapsed time is now
+        //    compounded.  Populate the chart data.
+        List<PieEntry> categoryEntries = new ArrayList<>();
+        for (String key : categoryElapsedTimeTotals.keySet()) {
+            long time = categoryElapsedTimeTotals.get(key);
+            categoryEntries.add(new PieEntry(((float) time) / totalTime * 100, key));
+        }
+
+        PieDataSet pieDataSet = new PieDataSet(categoryEntries, "Category Times %");
+        pieDataSet.setColors(ActivityTimerUtils.getColors(categoryElapsedTimeTotals.size()));
+
+        PieData pieData = new PieData(pieDataSet);
+        pieData.setValueFormatter(new PercentFormatter());
+        pieData.setValueTextSize(11f);
+
+        // 3. Adding the data to the chart.
+        mBinding.pcActivitiesByCategory.setData(pieData);
+
+        // setting the bar chart properties.
+        mBinding.pcActivitiesByCategory.getDescription().setEnabled(false);
+
+        // Now invalidate the chart to redraw.
+        mBinding.pcActivitiesByCategory.invalidate();
     }
 
     @Override
@@ -189,6 +353,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
                 }
                 break;
+            case RC_SIGN_IN:
+                if (resultCode == RESULT_CANCELED) {
+                    finish();
+                }
+                break;
         }
     }
 
@@ -217,6 +386,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     finish();
                                 }
                             });
+                    onSignedOutCleanup();
                     break;
             }
         }
@@ -239,6 +409,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 .child(getString(R.string.firebase_database_timed_activities));
 
         // 3. add a child to handle events
+        /*
         mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
             // Equal to an Insert / Create
             @Override
@@ -287,11 +458,13 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+        */
 
         // 1. setup the firebase auth instance.
         mFirebaseAuth = FirebaseAuth.getInstance();
 
         // 2. Create the Auth State listener.
+        /*
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -320,6 +493,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         // 3. Add to the auth instance.
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        */
 
         if (savedInstanceState != null) {
 
@@ -349,64 +523,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         }
     }
 
-    private void showEmpty() {
-        mBinding.rvTimedActivities.setVisibility(View.GONE);
-        mBinding.pcActivitiesByCategory.setVisibility(View.GONE);
-        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.GONE);
-        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.GONE);
-        mBinding.tvEmpty.setVisibility(View.VISIBLE);
-    }
-
-    private void hideEmtpy() {
-        mBinding.tvEmpty.setVisibility(View.GONE);
-        mBinding.rvTimedActivities.setVisibility(View.VISIBLE);
-        mBinding.pcActivitiesByCategory.setVisibility(View.VISIBLE);
-        mBinding.tvGraphTimerActivitiesLabel.setVisibility(View.VISIBLE);
-        mBinding.tvRvTimerActivitiesLabel.setVisibility(View.VISIBLE);
-    }
-
-    private void buildGraph() {
-        // 1. will need to organzie the current set of timed activities based off of category.
-        HashMap<String, Long> categoryElapsedTimeTotals = new HashMap<>();
-        long totalTime = 0L;
-
-        for (TimedActivity timedActivity : mTimedActivities) {
-            Long currentElapsedTime = categoryElapsedTimeTotals
-                    .getOrDefault(timedActivity.getCategory(), 0L) +
-                    timedActivity.getTotalElapsedTime();
-
-            // Update total
-            totalTime += timedActivity.getTotalElapsedTime();
-
-            // Write back total time for the category.
-            categoryElapsedTimeTotals.put(timedActivity.getCategory(), currentElapsedTime);
-        }
-
-        // 2. the mapping of all the categories with their respective total elapsed time is now
-        //    compounded.  Populate the chart data.
-        List<PieEntry> categoryEntries = new ArrayList<>();
-        for (String key : categoryElapsedTimeTotals.keySet()) {
-            long time = categoryElapsedTimeTotals.get(key);
-            categoryEntries.add(new PieEntry(((float) time) / totalTime * 100, key));
-        }
-
-        PieDataSet pieDataSet = new PieDataSet(categoryEntries, "Category Times %");
-        pieDataSet.setColors(ActivityTimerUtils.getColors(categoryElapsedTimeTotals.size()));
-
-        PieData pieData = new PieData(pieDataSet);
-        pieData.setValueFormatter(new PercentFormatter());
-        pieData.setValueTextSize(11f);
-
-        // 3. Adding the data to the chart.
-        mBinding.pcActivitiesByCategory.setData(pieData);
-
-        // setting the bar chart properties.
-        mBinding.pcActivitiesByCategory.getDescription().setEnabled(false);
-
-        // Now invalidate the chart to redraw.
-        mBinding.pcActivitiesByCategory.invalidate();
-    }
-
     @Override
     public void onClick(TimedActivity timedActivity) {
         // Support the launching of the intent to get the timeActivity details.
@@ -417,5 +533,24 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         intent.putExtras(bundle);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mAuthStateListener == null) {
+            createAuthStateListener();
+        }
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mAuthStateListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+            mAuthStateListener = null;
+        }
+        onSignedOutCleanup();
     }
 }

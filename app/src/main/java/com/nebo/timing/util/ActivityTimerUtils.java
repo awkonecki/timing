@@ -27,7 +27,7 @@ public class ActivityTimerUtils {
         for (int index = 0; index < activityNames.length; index++) {
             // Create the new activity with a random category.
             TimedActivity timedActivity = new TimedActivity(
-                    activityNames[index], CATEGORIES[random.nextInt(CATEGORIES.length)]);
+                    activityNames[index], CATEGORIES[random.nextInt(CATEGORIES.length)], null);
 
             // Now create a random set of sessions.
             int totalSessions = random.nextInt(50) + 1;

@@ -192,7 +192,7 @@ public class SelectActivity extends AppCompatActivity {
                     mSelectedActivity = mMapOfActivities.get(name);
 
                     if (mSelectedActivity == null) {
-                        mSelectedActivity = new TimedActivity(name, category);
+                        mSelectedActivity = new TimedActivity(name, category, null);
                     }
                 }
             }
