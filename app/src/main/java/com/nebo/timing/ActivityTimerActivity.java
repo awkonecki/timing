@@ -66,6 +66,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     private ChildEventListener mDBChildEventListner = null;
 
+    private boolean isClosing = false;
+
     private void onStopWatchClick() {
         Intent intent = new Intent(this, StopWatchActivity.class);
         startActivityForResult(intent, STOPWATCH_ACTIVITY);
@@ -209,30 +211,28 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             mAuthStateListener = new FirebaseAuth.AuthStateListener() {
                 @Override
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    if (firebaseAuth.getCurrentUser() == null) {
-                        Log.d(TAG, "onAuthStateChanged - null user");
-                        // No one is signed-in
-                        startActivityForResult(
-                                AuthUI.getInstance()
-                                        .createSignInIntentBuilder()
-                                        .setIsSmartLockEnabled(false)
-                                        .setAvailableProviders(Arrays.asList(
-                                                new AuthUI.IdpConfig.GoogleBuilder().build(),
-                                                new AuthUI.IdpConfig.EmailBuilder().build()))
-                                        .build(),
-                                RC_SIGN_IN);
-                    } else {
-                        // someone is already sign-in
-                        Log.d(TAG, "onAuthStateChanged - valid user");
-                        onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
+                    if (!isClosing) {
+                        if (firebaseAuth.getCurrentUser() == null) {
+                            Log.d(TAG, "onAuthStateChanged - null user");
+                            // No one is signed-in
+                            startActivityForResult(
+                                    AuthUI.getInstance()
+                                            .createSignInIntentBuilder()
+                                            .setIsSmartLockEnabled(false)
+                                            .setAvailableProviders(Arrays.asList(
+                                                    new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                                    new AuthUI.IdpConfig.EmailBuilder().build()))
+                                            .build(),
+                                    RC_SIGN_IN);
+                        } else {
+                            // someone is already sign-in
+                            Log.d(TAG, "onAuthStateChanged - valid user");
+                            onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
+                        }
                     }
-
                 }
             };
         }
-
-        // 3. Add to the auth instance.
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
     }
 
     private void showEmpty() {
@@ -316,8 +316,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                             if (sessionTotalTime != 0L) {
                                 // Handle the data for the for the individual laps.
                                 // need to handle assigning it to an activity (new / old).
-                                selectActivity();
-                            }
+                                selectActivity(); }
                             else {
                                 // Clear otherwise.
                                 sessionTotalTime = 0L;
@@ -379,6 +378,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                     onStopWatchClick();
                     break;
                 case R.id.mi_sign_out:
+                    isClosing = true;
+                    onSignedOutCleanup();
                     AuthUI.getInstance()
                             .signOut(this)
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -386,7 +387,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     finish();
                                 }
                             });
-                    onSignedOutCleanup();
                     break;
             }
         }
@@ -408,100 +408,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 .getReference()
                 .child(getString(R.string.firebase_database_timed_activities));
 
-        // 3. add a child to handle events
-        /*
-        mTimedActivitiesDBRef.addChildEventListener(new ChildEventListener() {
-            // Equal to an Insert / Create
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
-                if (timedActivity != null) {
-                    Log.d("Testing", "had child added " + dataSnapshot.toString());
-                    mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
-                    mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
-
-                    // TODO @awkonecki notify recyclerview widget
-                    if (mBinding.rvTimedActivities.getAdapter() != null) {
-                        ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                                .addNewTimedActivity(timedActivity);
-                        mTimedActivities.add(timedActivity);
-                        mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
-                    }
-
-                    // TODO @awkonecki update graph
-                    hideEmtpy();
-                    buildGraph();
-                }
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Log.d("Testing", "on child changed " + dataSnapshot.toString());
-                TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
-
-                if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
-                    ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                            .updateAtIndex(
-                                    mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
-                                    timedActivity);
-                }
-                hideEmtpy();
-                buildGraph();
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
-        */
-
         // 1. setup the firebase auth instance.
         mFirebaseAuth = FirebaseAuth.getInstance();
 
-        // 2. Create the Auth State listener.
-        /*
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                Log.d(TAG, "onAuthStateChanged.");
-
-                if (firebaseAuth.getCurrentUser() == null) {
-                    Log.d(TAG, "onAuthStateChanged - null user");
-                    // No one is signed-in
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setAvailableProviders(Arrays.asList(
-                                            new AuthUI.IdpConfig.GoogleBuilder().build(),
-                                            new AuthUI.IdpConfig.EmailBuilder().build()))
-                                    .build(),
-                            RC_SIGN_IN);
-                }
-                else {
-                    // someone is already sign-in
-                    Log.d(TAG, "onAuthStateChanged - valid user");
-                }
-
-            }
-        };
-
-        // 3. Add to the auth instance.
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        */
-
-        if (savedInstanceState != null) {
-
-        }
-        else {
-            // This is the base activity (main activity) thus do not expect to process data from
-            // intent.
-        }
+        attachDBListener();
 
         // Setup of the UI recyclerview widget
         mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
@@ -524,6 +434,12 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Log.d(TAG, "onSaveInstanceState");
+    }
+
+    @Override
     public void onClick(TimedActivity timedActivity) {
         // Support the launching of the intent to get the timeActivity details.
         Intent intent = new Intent(getApplicationContext(), TimedActivityDetailActivity.class);
@@ -538,19 +454,25 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        /*
+        Log.d(TAG, "onResume");
         if (mAuthStateListener == null) {
             createAuthStateListener();
         }
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        */
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        /*
+        Log.d(TAG, "onPause");
         if (mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
             mAuthStateListener = null;
         }
         onSignedOutCleanup();
+        */
     }
 }
