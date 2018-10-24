@@ -425,6 +425,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
+        setSupportActionBar(mBinding.tbActivityTimerActivityToolbar);
 
         // 1. get the firebase instance
         mFirebaseDatabase = FirebaseDatabase.getInstance();

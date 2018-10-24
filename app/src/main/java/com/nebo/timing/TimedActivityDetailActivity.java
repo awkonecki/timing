@@ -82,11 +82,11 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Create the databinding for referencing widgets within the UI.
-        mBinding = DataBindingUtil.setContentView(
-                this,
-                R.layout.activity_timed_activity_detail);
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timed_activity_detail);
+        setSupportActionBar(mBinding.tbActivityTimedActivityDetailToolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         if (savedInstanceState != null) {
             // use the instance data

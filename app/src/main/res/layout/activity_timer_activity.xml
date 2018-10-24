@@ -1,47 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android" >
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:text="@string/empty_data_message"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/tv_empty"
-            android:visibility="gone"
-            android:layout_gravity="center_horizontal|center_vertical"/>
+            android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/tv_rv_timer_activities_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_activities"/>
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/tb_activity_timer_activity_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:elevation="4dp"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_timed_activities"
-            android:layout_weight="4"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_margin="8dp"/>
+            <TextView
+                android:text="@string/empty_data_message"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/tv_empty"
+                android:visibility="gone"
+                android:layout_gravity="center_horizontal|center_vertical"/>
 
-        <TextView
-            android:id="@+id/tv_graph_timer_activities_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_activities_graph"
-            />
+            <TextView
+                android:id="@+id/tv_rv_timer_activities_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_activities"/>
 
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/pc_activities_by_category"
-            android:layout_margin="8dp"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="4" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_timed_activities"
+                android:layout_weight="4"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_margin="8dp"/>
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tv_graph_timer_activities_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_activities_graph"
+                />
+
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pc_activities_by_category"
+                android:layout_margin="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="4" />
+
+        </LinearLayout>
+
 </layout>

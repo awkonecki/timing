@@ -166,6 +166,11 @@ public class StopWatchActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
+        setSupportActionBar(mBinding.tbActivityStopwatchToolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
         long baseTime = 0L;
         List<String> timeStrings = new LinkedList<String>();
         int stopWatchState = StopWatch.sSTOP_STATE_VALUE;
