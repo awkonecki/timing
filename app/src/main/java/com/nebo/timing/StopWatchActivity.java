@@ -6,10 +6,12 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.transition.Slide;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Window;
 
 import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.data.TimedActivity;
@@ -165,11 +167,12 @@ public class StopWatchActivity extends AppCompatActivity implements
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        getWindow().setEnterTransition(new Slide());
+        getWindow().setExitTransition(new Slide());
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_stopwatch);
         setSupportActionBar(mBinding.tbActivityStopwatchToolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
 
         long baseTime = 0L;
         List<String> timeStrings = new LinkedList<String>();
