@@ -70,16 +70,18 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private boolean isClosing = false;
 
     private void onStopWatchClick() {
+        Log.d(TAG, "onStopWatchClick");
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(
                 getString(R.string.key_timed_activities),
                 (ArrayList<TimedActivity>) mTimedActivities);
         Intent intent = new Intent(this, StopWatchActivity.class);
         intent.putExtras(bundle);
-        startActivityForResult(intent, STOPWATCH_ACTIVITY, ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
+        startActivityForResult(intent, STOPWATCH_ACTIVITY);
     }
 
     private void selectActivity() {
+        Log.d(TAG, "selectActivity");
         Intent intent = new Intent(this, SelectActivity.class);
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(
@@ -145,6 +147,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void attachDBListener() {
+        Log.d(TAG, "attachDBListener");
+
         if (mDBChildEventListner == null) {
             mDBChildEventListner = new ChildEventListener() {
                 @Override
@@ -182,9 +186,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 }
 
                 @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                }
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
 
                 @Override
                 public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
@@ -198,6 +200,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void detachDBListener() {
+        Log.d(TAG, "detachDBListener");
+
         if (mDBChildEventListner != null) {
             Log.d(TAG, "detachDBListener");
 
@@ -208,8 +212,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
     private void onSignedInInitialize(String user) {
         Log.d(TAG, "onSignedInInitialize");
-        mCurrentUser = user;
-        attachDBListener();
+        if (mAuthStateListener != null) {
+            mCurrentUser = user;
+            attachDBListener();
+        }
     }
 
     private void onSignedOutCleanup() {
@@ -228,7 +234,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void createAuthStateListener() {
+        Log.d(TAG, "createAuthStateListener");
+
         if (mAuthStateListener == null) {
+            Log.d(TAG, "new AuthStateListener");
             mAuthStateListener = new FirebaseAuth.AuthStateListener() {
                 @Override
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -319,6 +328,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
 
         switch (requestCode) {
             case STOPWATCH_ACTIVITY:
+                Log.d(TAG, "STOPWATCH Result");
                 if (resultCode == RESULT_OK) {
                     // Get the data that is returned via the intent.
                     Bundle bundle = null;
@@ -354,6 +364,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 }
                 break;
             case SELECT_ACTIVITY:
+                Log.d(TAG, "Select Activity Result");
+
                 if (resultCode == RESULT_OK) {
                     Bundle bundle = null;
                     if (data != null) {
@@ -380,6 +392,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 }
                 break;
             case RC_SIGN_IN:
+                Log.d(TAG, "Sign in Result");
+
                 if (resultCode == RESULT_CANCELED) {
                     finish();
                 }
@@ -411,6 +425,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                             .signOut(this)
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 public void onComplete(@NonNull Task<Void> task) {
+                                    Log.d(TAG, "Signout Complete");
                                     finish();
                                 }
                             });
@@ -424,6 +439,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate Start");
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
         setSupportActionBar(mBinding.tbActivityTimerActivityToolbar);
@@ -459,12 +475,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             // Population of the Pie chart based on previously stored data.
             buildGraph();
         }
+        Log.d(TAG, "onCreate Finish");
+
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        // Log.d(TAG, "onSaveInstanceState");
+        Log.d(TAG, "onSaveInstanceState");
     }
 
     @Override
