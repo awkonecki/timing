@@ -84,7 +84,9 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timed_activity_detail);
         setSupportActionBar(mBinding.tbActivityTimedActivityDetailToolbar);
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         if (savedInstanceState != null) {
             // use the instance data

@@ -155,6 +155,10 @@ public class SelectActivity extends AppCompatActivity {
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        
         mBinding.tbUseNewActivityToggle.setChecked(false);
 
         if (savedInstanceState != null) {
