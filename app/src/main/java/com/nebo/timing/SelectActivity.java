@@ -29,10 +29,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class SelectActivity extends AppCompatActivity implements ValueEventListener {
+public class SelectActivity extends AppCompatActivity implements ValueEventListener,
+    SelectActivityAdapter.OnActivitySelection {
 
     private ActivitySelectActivityBinding mBinding = null;
-    private List<TimedActivity> mActivities = new ArrayList<>();
+    private int mSelectedIndex = -1;
+    private String mSelectedKey = null;
     private TimedActivity mSelectedActivity = null;
     private Query mQuery = null;
 
@@ -78,7 +80,9 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         mBinding.tbUseNewActivityToggle.setChecked(false);
 
         // Recycler view setup
-        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter(this));
+        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter(
+                this,
+                this));
         mBinding.rvSaveTimeActivities.setLayoutManager(
                 new LinearLayoutManager(
                         this,
@@ -91,15 +95,14 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
             @Override
             public void onClick(View v) {
                 if (mBinding.tbUseNewActivityToggle.isChecked()) {
-                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
-                    String name = mBinding.etNewActivityName.getText().toString();
-                    String category = mBinding.etNewActivityCategory.getText().toString();
-
-                    // mSelectedActivity = mMapOfActivities.get(name);
-
-                    if (mSelectedActivity == null) {
-                        mSelectedActivity = new TimedActivity(name, category, null);
-                    }
+                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                            .unSelect(
+                                    mBinding.rvSaveTimeActivities
+                                            .getLayoutManager()
+                                            .findViewByPosition(mSelectedIndex));
+                    mSelectedIndex = -1;
+                    mSelectedActivity = null;
+                    mSelectedKey = null;
                 }
             }
         });
@@ -146,38 +149,17 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         initializeView();
 
         if (savedInstanceState != null) {
-            mActivities = savedInstanceState.getParcelableArrayList(
-                    getString(R.string.key_timed_activities));
-            mBinding.etNewActivityName.setText(
-                    savedInstanceState.getString(getString(R.string.key_new_name_string)));
-            mBinding.etNewActivityCategory.setText(
-                    savedInstanceState.getString(getString(R.string.key_new_category_string)));
+
         }
         else {
-            // process intent data.
-            Bundle intentBundle = getIntent().getExtras();
 
-            if (intentBundle != null) {
-                mActivities = intentBundle.getParcelableArrayList(
-                        getString(R.string.key_timed_activities));
-            }
         }
-
-        Log.d("onCreate", FirebaseAuth.getInstance().getUid());
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(
-                getString(R.string.key_timed_activities), (ArrayList<TimedActivity>) mActivities);
-        outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
-        outState.putString(
-                getString(R.string.key_new_name_string),
-                mBinding.etNewActivityName.getText().toString());
-        outState.putString(
-                getString(R.string.key_new_category_string),
-                mBinding.etNewActivityCategory.getText().toString());
+
 
     }
 
@@ -196,10 +178,34 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     @Override
     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-            Log.d("onValueChanged", snapshot.toString());
+            TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
+            ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                    .addActivity(snapshot.getKey(), timedActivity);
         }
     }
 
     @Override
     public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+    @Override
+    public void selectedActivity(int index, String key, TimedActivity timedActivity) {
+        if (index == mSelectedIndex) {
+            ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                    .unSelect(
+                            mBinding.rvSaveTimeActivities
+                                    .getLayoutManager()
+                                    .findViewByPosition(mSelectedIndex));
+            mSelectedIndex = -1;
+            mSelectedActivity = null;
+            mSelectedKey = null;
+        }
+        else {
+            mSelectedActivity = timedActivity;
+            mSelectedIndex = index;
+            mSelectedKey = key;
+        }
+
+        // Toggle button default state
+        mBinding.tbUseNewActivityToggle.setChecked(false);
+    }
 }
