@@ -5,126 +5,164 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.transition.Slide;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.nebo.timing.async.PushTimedActivity;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
-import com.nebo.timing.databinding.TimedActivityElementBinding;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-public class SelectActivity extends AppCompatActivity {
+public class SelectActivity extends AppCompatActivity implements ValueEventListener,
+        SelectActivityAdapter.OnActivitySelection,
+        LoaderManager.LoaderCallbacks<Void> {
 
+    private static final int ASYNC_PUSH_DATA = 1;
     private ActivitySelectActivityBinding mBinding = null;
-    private List<TimedActivity> mActivities = new ArrayList<>();
+    private int mSelectedIndex = -1;
+    private String mSelectedKey = null;
     private TimedActivity mSelectedActivity = null;
-    private HashMap<String, TimedActivity> mMapOfActivities = new HashMap<>();
+    private Query mQuery = null;
+    private ArrayList<String> mKeys = new ArrayList<>();
+    // TODO @awkonecki pass in logged in user uid from auth state change.
+    private String mUserUid = FirebaseAuth.getInstance().getUid();
 
-    private class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private long mSessionTotalTime = 0L;
+    private long [] mSessionLapTimes = null;
 
-        private View mSelectedView = null;
+    private void saveSelectedAndFinish() {
+        // Create the bundle for the async task
+        Bundle args = new Bundle();
 
-        @NonNull
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            TimedActivityElementBinding binding = DataBindingUtil.inflate(
-                    getLayoutInflater(),
-                    R.layout.timed_activity_element,
-                    parent,
-                    false);
+        args.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
+        args.putString(getString(R.string.key_user_uid), mUserUid);
+        // TODO @awkonecki let user specify session name other than default.
+        args.putString(getString(R.string.key_session_name), getString(R.string.default_session_name));
+        args.putStringArrayList(getString(R.string.key_timed_activity_keys), mKeys);
 
-            return new SelectActivityView(binding);
+        if (mBinding.tbUseNewActivityToggle.isChecked()) {
+            // use the user specified name & category in creation of a new.
+            args.putString(getString(R.string.key_new_name_string),
+                    mBinding.etNewActivityName.getText().toString());
+            args.putString(getString(R.string.key_new_category_string),
+                    mBinding.etNewActivityCategory.getText().toString());
+        }
+        else {
+            args.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+            args.putString(getString(R.string.key_timed_activity_key), mSelectedKey);
+
         }
 
-        @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            if (position >= 0 && position < mActivities.size()) {
-                ((SelectActivityView)holder).bind(mActivities.get(position));
-            }
+        detachQueryListener();
+
+        // Launch of the async task.
+        if (getSupportLoaderManager().getLoader(ASYNC_PUSH_DATA) == null) {
+            getSupportLoaderManager().initLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
         }
-
-        @Override
-        public int getItemCount() {
-            return mActivities.size();
-        }
-
-        public void unSelect() {
-            if (mSelectedView != null) {
-                mSelectedView.setBackgroundColor(0xFFFFFF);
-                mSelectedActivity = null;
-                mSelectedView = null;
-            }
-        }
-
-        private class SelectActivityView extends RecyclerView.ViewHolder implements View.OnClickListener {
-            private final TimedActivityElementBinding elementBinding;
-
-            public SelectActivityView(TimedActivityElementBinding binding) {
-                super(binding.getRoot());
-                elementBinding = binding;
-                elementBinding.tvTimedActivityTime.setVisibility(View.GONE);
-                itemView.setOnClickListener(this);
-            }
-
-            public void bind(TimedActivity timedActivity) {
-                elementBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
-                elementBinding.tvTimedActivityName.setText(timedActivity.getName());
-            }
-
-            @Override
-            public void onClick(View v) {
-                int index = getAdapterPosition();
-
-                if (v == mSelectedView) {
-                    mSelectedView.setBackgroundColor(0xFFFFFF);
-                    mSelectedActivity = null;
-                    mSelectedView = null;
-                }
-                else {
-                    if (index >= 0 && index < mActivities.size()) {
-                        mSelectedActivity = mActivities.get(index);
-                    }
-
-                    if (mSelectedView != null) {
-                        mSelectedView.setBackgroundColor(0xFFFFFF);
-                    }
-
-                    v.setBackgroundColor(getColor(R.color.colorAccent));
-                    mSelectedView = v;
-
-                    mBinding.tbUseNewActivityToggle.setChecked(false);
-                }
-            }
+        else {
+            getSupportLoaderManager().restartLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
         }
     }
 
-    private void saveSelectedAndFinish() {
-        Bundle bundle = new Bundle();
-        if (mSelectedActivity != null) {
-            if (mBinding.tbUseNewActivityToggle.isChecked()) {
-                mSelectedActivity = new TimedActivity(
-                        mBinding.etNewActivityName.getText().toString(),
-                        mBinding.etNewActivityCategory.getText().toString(),
-                        null);
-            }
-
-            bundle.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+    private void attachQueryListener() {
+        // Build the query on the Firebase data reference only if the uid is valid.
+        if (FirebaseAuth.getInstance().getUid() != null && mQuery == null) {
+            mQuery = FirebaseDatabase.getInstance().getReference()
+                    .child(getString(R.string.firebase_database_timed_activities))
+                    .orderByChild(getString(R.string.firebase_database_activity_user))
+                    .equalTo(FirebaseAuth.getInstance().getUid());
+            mQuery.addValueEventListener(this);
         }
+    }
 
-        Intent intent = new Intent();
-        intent.putExtras(bundle);
-        setResult(RESULT_OK, intent);
-        finish();
+    private void detachQueryListener() {
+        if (mQuery != null) {
+            mQuery.removeEventListener(this);
+            mQuery = null;
+        }
+    }
+
+    private void initializeView() {
+        // Recycler view setup
+        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter(
+                this,
+                this,
+                mSelectedIndex));
+        mBinding.rvSaveTimeActivities.setLayoutManager(
+                new LinearLayoutManager(
+                        this,
+                        LinearLayoutManager.VERTICAL,
+                        false));
+        mBinding.rvSaveTimeActivities.setHasFixedSize(true);
+
+        // setup of the toggle button behavior.
+        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBinding.tbUseNewActivityToggle.isChecked()) {
+                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                            .unSelect(
+                                    mBinding.rvSaveTimeActivities
+                                            .getLayoutManager()
+                                            .findViewByPosition(mSelectedIndex));
+                    mSelectedIndex = -1;
+                    mSelectedActivity = null;
+                    mSelectedKey = null;
+                }
+            }
+        });
+    }
+
+    private void loadInstanceData(@Nullable Bundle instanceState) {
+        if (instanceState != null) {
+            mSelectedActivity = instanceState.getParcelable(
+                    getString(R.string.key_selected_activity));
+            mSelectedKey = instanceState.getString(
+                    getString(R.string.key_timed_activity_key), null);
+            mSelectedIndex = instanceState.getInt(
+                    getString(R.string.key_selected_activity_index), -1);
+            mBinding.tbUseNewActivityToggle.setChecked(instanceState.getBoolean(
+                    getString(R.string.key_tb_status),false));
+            mBinding.etNewActivityName.setText(
+                    instanceState.getString(
+                            getString(R.string.key_new_name_string),
+                            getString(R.string.edit_activity_name_default)));
+            mBinding.etNewActivityCategory.setText(
+                    instanceState.getString(
+                            getString(R.string.key_new_category_string),
+                            getString(R.string.edit_activity_category_default)));
+
+            mSessionTotalTime = instanceState.getLong(
+                    getString(R.string.key_total_time),
+                    0L);
+            mSessionLapTimes = instanceState.getLongArray(
+                    getString(R.string.key_lap_times));
+        }
+        else {
+            Bundle bundle = getIntent().getExtras();
+
+            if (bundle != null) {
+                mSessionTotalTime = bundle.getLong(
+                        getString(R.string.key_total_time),
+                        0L);
+                mSessionLapTimes = bundle.getLongArray(
+                        getString(R.string.key_lap_times));
+            }
+        }
     }
 
     @Override
@@ -143,7 +181,13 @@ public class SelectActivity extends AppCompatActivity {
         if (item != null) {
             switch (item.getItemId()) {
                 case R.id.mi_save_selected_activity:
-                    saveSelectedAndFinish();
+                    if (mBinding.tbUseNewActivityToggle.isChecked() || mSelectedIndex != -1) {
+                        // perform the async task that is responsible of pushing the data.
+                        saveSelectedAndFinish();
+                    }
+                    else {
+                        finish();
+                    }
                     break;
             }
         }
@@ -155,71 +199,40 @@ public class SelectActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Handling of animations for the the activity
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         getWindow().setEnterTransition(new Slide());
         getWindow().setExitTransition(new Slide());
 
+        // Setup of the view
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
-        
-        mBinding.tbUseNewActivityToggle.setChecked(false);
-
-        if (savedInstanceState != null) {
-            mActivities = savedInstanceState.getParcelableArrayList(
-                    getString(R.string.key_timed_activities));
-            mBinding.etNewActivityName.setText(
-                    savedInstanceState.getString(getString(R.string.key_new_name_string)));
-            mBinding.etNewActivityCategory.setText(
-                    savedInstanceState.getString(getString(R.string.key_new_category_string)));
-        }
-        else {
-            // process intent data.
-            Bundle intentBundle = getIntent().getExtras();
-
-            if (intentBundle != null) {
-                mActivities = intentBundle.getParcelableArrayList(
-                        getString(R.string.key_timed_activities));
-            }
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Setup the hash set to aid in making sure unique activities by name.
-        for (TimedActivity activity : mActivities) {
-            mMapOfActivities.put(activity.getName(), activity);
-        }
+        // Load the data.
+        loadInstanceData(savedInstanceState);
 
-        // setup the view's recyclerview widget
-        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter());
-        mBinding.rvSaveTimeActivities.setLayoutManager(
-                new LinearLayoutManager(
-                        this,
-                        LinearLayoutManager.VERTICAL,
-                        false));
-        mBinding.rvSaveTimeActivities.setHasFixedSize(true);
-
-        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mBinding.tbUseNewActivityToggle.isChecked()) {
-                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
-                    String name = mBinding.etNewActivityName.getText().toString();
-                    String category = mBinding.etNewActivityCategory.getText().toString();
-
-                    mSelectedActivity = mMapOfActivities.get(name);
-
-                    if (mSelectedActivity == null) {
-                        mSelectedActivity = new TimedActivity(name, category, null);
-                    }
-                }
-            }
-        });
+        // Initialize the view
+        initializeView();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(
-                getString(R.string.key_timed_activities), (ArrayList<TimedActivity>) mActivities);
-        outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        if (mSelectedActivity != null) {
+            outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        }
+        if (mSelectedKey != null) {
+            outState.putString(getString(R.string.key_timed_activity_key), mSelectedKey);
+        }
+        if (mSelectedIndex != -1) {
+            outState.putInt(getString(R.string.key_selected_activity_index), mSelectedIndex);
+        }
+        if (mBinding.tbUseNewActivityToggle.isChecked()) {
+            outState.putBoolean(getString(R.string.key_tb_status), true);
+        }
+
         outState.putString(
                 getString(R.string.key_new_name_string),
                 mBinding.etNewActivityName.getText().toString());
@@ -227,5 +240,81 @@ public class SelectActivity extends AppCompatActivity {
                 getString(R.string.key_new_category_string),
                 mBinding.etNewActivityCategory.getText().toString());
 
+        outState.putLong(getString(R.string.key_total_time), mSessionTotalTime);
+        outState.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
+
+        super.onSaveInstanceState(outState);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        attachQueryListener();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        detachQueryListener();
+    }
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+            TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
+            ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                    .addActivity(snapshot.getKey(), timedActivity);
+            mKeys.add(snapshot.getKey());
+        }
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+    @Override
+    public void selectedActivity(int index, String key, TimedActivity timedActivity) {
+        if (index == mSelectedIndex) {
+            ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
+                    .unSelect(
+                            mBinding.rvSaveTimeActivities
+                                    .getLayoutManager()
+                                    .findViewByPosition(mSelectedIndex));
+            mSelectedIndex = -1;
+            mSelectedActivity = null;
+            mSelectedKey = null;
+        }
+        else {
+            mSelectedActivity = timedActivity;
+            mSelectedIndex = index;
+            mSelectedKey = key;
+        }
+
+        // Toggle button default state
+        mBinding.tbUseNewActivityToggle.setChecked(false);
+    }
+
+    @NonNull
+    @Override
+    public Loader<Void> onCreateLoader(int id, @Nullable Bundle args) {
+        Loader<Void> loader = null;
+
+        switch (id) {
+            case ASYNC_PUSH_DATA:
+                loader = new PushTimedActivity(this, args);
+                break;
+            default:
+                loader = new Loader<>(this);
+                break;
+        }
+
+        return loader;
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Void> loader, Void data) {
+        finish();
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Void> loader) {}
 }

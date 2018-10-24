@@ -30,12 +30,19 @@
     <string name="key_selected_activity_index" translatable="false">Highlighted Activity</string>
     <string name="firebase_database_activity_sessions" translatable="false">activitySessions</string>
     <string name="firebase_database_activity_total_elapsed_time" translatable="false">totalElapsedTime</string>
+    <string name="firebase_database_activity_user" translatable="false">user</string>
     <string name="empty_data_message" translatable="true">No Timed Activities Available</string>
     <string name="mi_sign_out" translatable="true">Sign Out</string>
     <string name="label_lap" translatable="true">Lap</string>
     <string name="lap_format" translatable="false">%s %s</string>
     <string name="label_date" translatable="true">Date</string>
     <string name="label_labels" translatable="true">Labels</string>
+    <string name="key_timed_activity_key" translatable="false">timed-activity-key</string>
+    <string name="key_timed_activity_index" translatable="false">timed-activity-index</string>
+    <string name="key_user_uid" translatable="false">user-uid</string>
+    <string name="key_session_name" translatable="false">session-name</string>
+    <string name="default_session_name" translatable="true">Session</string>
+    <string name="key_timed_activity_keys" translatable="false">timed-activity-keys</string>
 
     <string name="fab_start_stop_description" translatable="true">Button to allow for starting and stopping the stopwatch.</string>
     <string name="fab_reset_lap_description" translatable="true">Button to allow for reseting the current time and creating a new lap.</string>

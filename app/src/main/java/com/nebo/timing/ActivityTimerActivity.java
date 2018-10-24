@@ -51,7 +51,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private Map<String, Integer> mActivityKeyToIndex = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
-    public static final int SELECT_ACTIVITY = 2;
     public static final int RC_SIGN_IN = 3;
 
     private FirebaseDatabase mFirebaseDatabase;
@@ -70,80 +69,27 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private boolean isClosing = false;
 
     private void onStopWatchClick() {
-        Log.d(TAG, "onStopWatchClick");
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(
                 getString(R.string.key_timed_activities),
                 (ArrayList<TimedActivity>) mTimedActivities);
-        Intent intent = new Intent(this, StopWatchActivity.class);
+        Intent intent = new Intent(getApplicationContext(), StopWatchActivity.class);
         intent.putExtras(bundle);
-        startActivityForResult(intent, STOPWATCH_ACTIVITY);
+        startActivityForResult(intent, STOPWATCH_ACTIVITY,
+                ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
     }
 
     private void selectActivity() {
-        Log.d(TAG, "selectActivity");
-        Intent intent = new Intent(this, SelectActivity.class);
+        Intent intent = new Intent(getApplicationContext(), SelectActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(
-                getString(R.string.key_timed_activities),
-                (ArrayList<TimedActivity>) mTimedActivities);
+        bundle.putLongArray(getString(R.string.key_lap_times), sessionLapTimes);
         intent.putExtras(bundle);
-        startActivityForResult(intent, SELECT_ACTIVITY);
-    }
 
-    private void saveFirebaseEntry() {
-        // create a new session
-        ActivitySession session = new ActivitySession("Session");
-        for (long sessionLap : sessionLapTimes) {
-            session.addSessionLapTime(sessionLap);
-        }
+        // clear prior to starting the activity to prevent resume from calling selectActivity again.
+        sessionLapTimes = null;
+        sessionTotalTime = 0L;
 
-        TimedActivity timedActivity = null;
-
-        if (mActivityNameToActivityKey.get(mSelectedActivity.getName()) != null) {
-            timedActivity = mKeyToTimedActivities.get(
-                    mActivityNameToActivityKey.get(mSelectedActivity.getName()));
-        }
-
-        Log.d(TAG, "Mapping size " + Integer.toString(mActivityNameToActivityKey.size()));
-
-        // now need to see if this will be a new entry or an update to an already existing timed
-        // activity.
-        if (timedActivity == null) {
-            // new entry.
-            Log.d(TAG, "new");
-            timedActivity = new TimedActivity(
-                    mSelectedActivity.getName(),
-                    mSelectedActivity.getCategory(),
-                    mCurrentUser);
-
-            timedActivity.addActivitySession(session);
-            mTimedActivitiesDBRef.push().setValue(timedActivity);
-        }
-        else {
-            // update existing.
-            Log.d(TAG, "First");
-            // 1. need to go into the location into the firebase database within the
-            // timed-activities location.
-            DatabaseReference dbref = mTimedActivitiesDBRef
-                    .child(mActivityNameToActivityKey.get(timedActivity.getName()));
-            Log.d(TAG, "second");
-            // 2. add the new session to the activity.
-            timedActivity.addActivitySession(session);
-            Log.d(TAG, "third");
-            // 3. get the list and update with a map.
-            Map<String, Object> updateOfSessions = new HashMap<>();
-            updateOfSessions.put(getString(
-                    R.string.firebase_database_activity_sessions),
-                    timedActivity.getActivitySessions());
-            updateOfSessions.put(
-                    getString(R.string.firebase_database_activity_total_elapsed_time),
-                    timedActivity.getTotalElapsedTime());
-            Log.d(TAG, "forth");
-            // 4. update
-            dbref.updateChildren(updateOfSessions);
-        }
-        Log.d(TAG, "done");
+        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
     }
 
     private void attachDBListener() {
@@ -324,71 +270,23 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d(TAG, "onActivityResult");
 
         switch (requestCode) {
             case STOPWATCH_ACTIVITY:
-                Log.d(TAG, "STOPWATCH Result");
-                if (resultCode == RESULT_OK) {
+                if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
                     // Get the data that is returned via the intent.
-                    Bundle bundle = null;
-                    if (data != null) {
-                        bundle = data.getExtras();
+                    Bundle bundle = data.getExtras();
 
-                        if (bundle != null) {
-                            sessionTotalTime = bundle.getLong(
-                                    getString(R.string.key_total_time),
-                                    0L);
-                            sessionLapTimes = bundle.getLongArray(
-                                    getString(R.string.key_lap_times));
+                    sessionTotalTime = bundle.getLong(
+                            getString(R.string.key_total_time),
+                            0L);
+                    sessionLapTimes = bundle.getLongArray(getString(R.string.key_lap_times));
 
-                            mTimedActivities = bundle.
-                                    getParcelableArrayList(getString(R.string.key_timed_activities));
-
-                            if (mTimedActivities == null) {
-                                mTimedActivities = new ArrayList<>();
-                            }
-
-                            if (sessionTotalTime != 0L) {
-                                // Handle the data for the for the individual laps.
-                                // need to handle assigning it to an activity (new / old).
-                                selectActivity();
-                            }
-                            else {
-                                // Clear otherwise.
-                                sessionTotalTime = 0L;
-                                sessionLapTimes = null;
-                            }
-                        }
+                    if (sessionTotalTime == 0L) {
+                        // Clear otherwise.
+                        sessionTotalTime = 0L;
+                        sessionLapTimes = null;
                     }
-                }
-                break;
-            case SELECT_ACTIVITY:
-                Log.d(TAG, "Select Activity Result");
-
-                if (resultCode == RESULT_OK) {
-                    Bundle bundle = null;
-                    if (data != null) {
-                        bundle = data.getExtras();
-
-                        if (bundle != null) {
-                            mSelectedActivity = bundle.getParcelable(
-                                    getString(R.string.key_selected_activity));
-
-                            if (mSelectedActivity != null) {
-                                Log.d("ActivityTimerActivity", "onACtivityResult SelectActivity returned " + mSelectedActivity.getName() + " " + mSelectedActivity.getCategory());
-                                saveFirebaseEntry();
-                            }
-                            else {
-                                // Clear otherwise, not allowing re-selection of activity with the
-                                // previous recorded time.
-                                sessionTotalTime = 0L;
-                                sessionLapTimes = null;
-                            }
-                        }
-                    }
-
-
                 }
                 break;
             case RC_SIGN_IN:
@@ -505,6 +403,10 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         if (mAuthStateListener == null) {
             createAuthStateListener();
             mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        }
+
+        if (sessionLapTimes != null) {
+            selectActivity();
         }
     }
 
