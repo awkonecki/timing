@@ -38,6 +38,9 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     private TimedActivity mSelectedActivity = null;
     private Query mQuery = null;
 
+    private long mSessionTotalTime = 0L;
+    private long [] mSessionLapTimes = null;
+
     private void saveSelectedAndFinish() {
         // TODO @awkonecki actually perform the update of the data.
         /*
@@ -128,10 +131,22 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
                             getString(R.string.key_new_category_string),
                             getString(R.string.edit_activity_category_default)));
 
-            // TODO @awkonecki lifecycle event loading of times
+            mSessionTotalTime = instanceState.getLong(
+                    getString(R.string.key_total_time),
+                    0L);
+            mSessionLapTimes = instanceState.getLongArray(
+                    getString(R.string.key_lap_times));
         }
         else {
-            // TODO @awkonecki intent loading of times
+            Bundle bundle = getIntent().getExtras();
+
+            if (bundle != null) {
+                mSessionTotalTime = bundle.getLong(
+                        getString(R.string.key_total_time),
+                        0L);
+                mSessionLapTimes = bundle.getLongArray(
+                        getString(R.string.key_lap_times));
+            }
         }
     }
 
@@ -204,7 +219,8 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
                 getString(R.string.key_new_category_string),
                 mBinding.etNewActivityCategory.getText().toString());
 
-        // TODO @awkonecki lifecycle event saving of times
+        outState.putLong(getString(R.string.key_total_time), mSessionTotalTime);
+        outState.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
 
         super.onSaveInstanceState(outState);
     }
