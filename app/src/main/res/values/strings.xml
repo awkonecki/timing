@@ -30,6 +30,7 @@
     <string name="key_selected_activity_index" translatable="false">Highlighted Activity</string>
     <string name="firebase_database_activity_sessions" translatable="false">activitySessions</string>
     <string name="firebase_database_activity_total_elapsed_time" translatable="false">totalElapsedTime</string>
+    <string name="firebase_database_activity_user" translatable="false">user</string>
     <string name="empty_data_message" translatable="true">No Timed Activities Available</string>
     <string name="mi_sign_out" translatable="true">Sign Out</string>
     <string name="label_lap" translatable="true">Lap</string>

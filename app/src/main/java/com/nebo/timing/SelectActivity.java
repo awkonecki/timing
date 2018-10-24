@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +17,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 
@@ -23,12 +29,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class SelectActivity extends AppCompatActivity {
+public class SelectActivity extends AppCompatActivity implements ValueEventListener {
 
     private ActivitySelectActivityBinding mBinding = null;
     private List<TimedActivity> mActivities = new ArrayList<>();
     private TimedActivity mSelectedActivity = null;
-    private HashMap<String, TimedActivity> mMapOfActivities = new HashMap<>();
+    private Query mQuery = null;
 
     private void saveSelectedAndFinish() {
         Bundle bundle = new Bundle();
@@ -47,6 +53,56 @@ public class SelectActivity extends AppCompatActivity {
         intent.putExtras(bundle);
         setResult(RESULT_OK, intent);
         finish();
+    }
+
+    private void attachQueryListener() {
+        // Build the query on the Firebase data reference only if the uid is valid.
+        if (FirebaseAuth.getInstance().getUid() != null && mQuery == null) {
+            mQuery = FirebaseDatabase.getInstance().getReference()
+                    .child(getString(R.string.firebase_database_timed_activities))
+                    .orderByChild(getString(R.string.firebase_database_activity_user))
+                    .equalTo(FirebaseAuth.getInstance().getUid());
+            mQuery.addValueEventListener(this);
+        }
+    }
+
+    private void detachQueryListener() {
+        if (mQuery != null) {
+            mQuery.removeEventListener(this);
+            mQuery = null;
+        }
+    }
+
+    private void initializeView() {
+        // Toggle button default state
+        mBinding.tbUseNewActivityToggle.setChecked(false);
+
+        // Recycler view setup
+        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter(this));
+        mBinding.rvSaveTimeActivities.setLayoutManager(
+                new LinearLayoutManager(
+                        this,
+                        LinearLayoutManager.VERTICAL,
+                        false));
+        mBinding.rvSaveTimeActivities.setHasFixedSize(true);
+
+        // setup of the toggle button behavior.
+        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBinding.tbUseNewActivityToggle.isChecked()) {
+                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
+                    String name = mBinding.etNewActivityName.getText().toString();
+                    String category = mBinding.etNewActivityCategory.getText().toString();
+
+                    // mSelectedActivity = mMapOfActivities.get(name);
+
+                    if (mSelectedActivity == null) {
+                        mSelectedActivity = new TimedActivity(name, category, null);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -77,19 +133,17 @@ public class SelectActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Handling of animations for the the activity
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         getWindow().setEnterTransition(new Slide());
         getWindow().setExitTransition(new Slide());
 
+        // Setup of the view
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
-        
-        mBinding.tbUseNewActivityToggle.setChecked(false);
 
-        // if the auth state is not valid then no work to do, just return.
-        if (FirebaseAuth.getInstance().getUid() == null) {
-            finish();
-        }
+        // Initialize the view
+        initializeView();
 
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(
@@ -109,36 +163,7 @@ public class SelectActivity extends AppCompatActivity {
             }
         }
 
-        // Setup the hash set to aid in making sure unique activities by name.
-        for (TimedActivity activity : mActivities) {
-            mMapOfActivities.put(activity.getName(), activity);
-        }
-
-        // setup the view's recyclerview widget
-        mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter());
-        mBinding.rvSaveTimeActivities.setLayoutManager(
-                new LinearLayoutManager(
-                        this,
-                        LinearLayoutManager.VERTICAL,
-                        false));
-        mBinding.rvSaveTimeActivities.setHasFixedSize(true);
-
-        mBinding.tbUseNewActivityToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mBinding.tbUseNewActivityToggle.isChecked()) {
-                    ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter()).unSelect();
-                    String name = mBinding.etNewActivityName.getText().toString();
-                    String category = mBinding.etNewActivityCategory.getText().toString();
-
-                    mSelectedActivity = mMapOfActivities.get(name);
-
-                    if (mSelectedActivity == null) {
-                        mSelectedActivity = new TimedActivity(name, category, null);
-                    }
-                }
-            }
-        });
+        Log.d("onCreate", FirebaseAuth.getInstance().getUid());
     }
 
     @Override
@@ -155,4 +180,26 @@ public class SelectActivity extends AppCompatActivity {
                 mBinding.etNewActivityCategory.getText().toString());
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        attachQueryListener();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        detachQueryListener();
+    }
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+            Log.d("onValueChanged", snapshot.toString());
+        }
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError databaseError) {}
 }
