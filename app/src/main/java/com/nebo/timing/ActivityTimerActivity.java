@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -75,7 +76,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 (ArrayList<TimedActivity>) mTimedActivities);
         Intent intent = new Intent(this, StopWatchActivity.class);
         intent.putExtras(bundle);
-        startActivityForResult(intent, STOPWATCH_ACTIVITY);
+        startActivityForResult(intent, STOPWATCH_ACTIVITY, ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
     }
 
     private void selectActivity() {
@@ -475,7 +476,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         bundle.putParcelable(getString(R.string.key_timed_activity), timedActivity);
 
         intent.putExtras(bundle);
-        startActivity(intent);
+        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
     }
 
     @Override

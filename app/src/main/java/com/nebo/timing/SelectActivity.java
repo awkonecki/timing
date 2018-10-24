@@ -8,10 +8,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.transition.Slide;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
@@ -153,11 +155,12 @@ public class SelectActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        getWindow().setEnterTransition(new Slide());
+        getWindow().setExitTransition(new Slide());
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
         
         mBinding.tbUseNewActivityToggle.setChecked(false);
 

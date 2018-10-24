@@ -7,7 +7,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.transition.Slide;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
@@ -82,6 +84,11 @@ public class TimedActivityDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        getWindow().setEnterTransition(new Slide());
+        getWindow().setExitTransition(new Slide());
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timed_activity_detail);
         setSupportActionBar(mBinding.tbActivityTimedActivityDetailToolbar);
         if (getSupportActionBar() != null) {
