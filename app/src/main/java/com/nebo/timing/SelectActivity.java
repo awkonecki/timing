@@ -5,6 +5,8 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,6 +24,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.nebo.timing.async.PushTimedActivity;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 
@@ -30,37 +33,54 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SelectActivity extends AppCompatActivity implements ValueEventListener,
-    SelectActivityAdapter.OnActivitySelection {
+        SelectActivityAdapter.OnActivitySelection,
+        LoaderManager.LoaderCallbacks<Void> {
 
+    private static final int ASYNC_PUSH_DATA = 1;
     private ActivitySelectActivityBinding mBinding = null;
     private int mSelectedIndex = -1;
     private String mSelectedKey = null;
     private TimedActivity mSelectedActivity = null;
     private Query mQuery = null;
+    private ArrayList<String> mKeys = new ArrayList<>();
+    // TODO @awkonecki pass in logged in user uid from auth state change.
+    private String mUserUid = FirebaseAuth.getInstance().getUid();
 
     private long mSessionTotalTime = 0L;
     private long [] mSessionLapTimes = null;
 
     private void saveSelectedAndFinish() {
-        // TODO @awkonecki actually perform the update of the data.
-        /*
-        Bundle bundle = new Bundle();
-        if (mSelectedActivity != null) {
-            if (mBinding.tbUseNewActivityToggle.isChecked()) {
-                mSelectedActivity = new TimedActivity(
-                        mBinding.etNewActivityName.getText().toString(),
-                        mBinding.etNewActivityCategory.getText().toString(),
-                        null);
-            }
+        // Create the bundle for the async task
+        Bundle args = new Bundle();
 
-            bundle.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        args.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
+        args.putString(getString(R.string.key_user_uid), mUserUid);
+        // TODO @awkonecki let user specify session name other than default.
+        args.putString(getString(R.string.key_session_name), getString(R.string.default_session_name));
+        args.putStringArrayList(getString(R.string.key_timed_activity_keys), mKeys);
+
+        if (mBinding.tbUseNewActivityToggle.isChecked()) {
+            // use the user specified name & category in creation of a new.
+            args.putString(getString(R.string.key_new_name_string),
+                    mBinding.etNewActivityName.getText().toString());
+            args.putString(getString(R.string.key_new_category_string),
+                    mBinding.etNewActivityCategory.getText().toString());
+        }
+        else {
+            args.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+            args.putString(getString(R.string.key_timed_activity_key), mSelectedKey);
+
         }
 
-        Intent intent = new Intent();
-        intent.putExtras(bundle);
-        setResult(RESULT_OK, intent);
-        */
-        finish();
+        detachQueryListener();
+
+        // Launch of the async task.
+        if (getSupportLoaderManager().getLoader(ASYNC_PUSH_DATA) == null) {
+            getSupportLoaderManager().initLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
+        }
+        else {
+            getSupportLoaderManager().restartLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
+        }
     }
 
     private void attachQueryListener() {
@@ -166,7 +186,13 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         if (item != null) {
             switch (item.getItemId()) {
                 case R.id.mi_save_selected_activity:
-                    saveSelectedAndFinish();
+                    if (mBinding.tbUseNewActivityToggle.isChecked() || mSelectedIndex != -1) {
+                        // perform the async task that is responsible of pushing the data.
+                        saveSelectedAndFinish();
+                    }
+                    else {
+                        finish();
+                    }
                     break;
             }
         }
@@ -243,6 +269,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
             TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
             ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
                     .addActivity(snapshot.getKey(), timedActivity);
+            mKeys.add(snapshot.getKey());
         }
     }
 
@@ -269,5 +296,29 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
 
         // Toggle button default state
         mBinding.tbUseNewActivityToggle.setChecked(false);
+    }
+
+    @NonNull
+    @Override
+    public Loader<Void> onCreateLoader(int id, @Nullable Bundle args) {
+        Loader<Void> loader = null;
+
+        switch (id) {
+            case ASYNC_PUSH_DATA:
+                loader = new PushTimedActivity(this, args);
+                break;
+        }
+
+        return loader;
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Void> loader, Void data) {
+        finish();
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Void> loader) {
+
     }
 }
