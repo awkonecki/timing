@@ -9,13 +9,10 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.transition.Slide;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,8 +26,6 @@ import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class SelectActivity extends AppCompatActivity implements ValueEventListener,
         SelectActivityAdapter.OnActivitySelection,
@@ -307,6 +302,9 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
             case ASYNC_PUSH_DATA:
                 loader = new PushTimedActivity(this, args);
                 break;
+            default:
+                loader = new Loader<>(this);
+                break;
         }
 
         return loader;
@@ -318,7 +316,5 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     }
 
     @Override
-    public void onLoaderReset(@NonNull Loader<Void> loader) {
-
-    }
+    public void onLoaderReset(@NonNull Loader<Void> loader) {}
 }
