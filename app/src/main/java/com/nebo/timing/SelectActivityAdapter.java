@@ -24,6 +24,7 @@ public class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     private final Context mContext;
     private List<TimedActivity> mActivities = new ArrayList<>();
     private SparseArray<String> mActivityKeyIndex = new SparseArray<>();
+    private int mSelectedIndex = -1;
 
     private final OnActivitySelection mCallback;
 
@@ -59,14 +60,16 @@ public class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         void selectedActivity(int position, String key, TimedActivity timedActivity);
     }
 
-    public SelectActivityAdapter(Context context, @NonNull OnActivitySelection interfaceCallback) {
+    public SelectActivityAdapter(Context context, @NonNull OnActivitySelection interfaceCallback, int selectedIndex) {
         mContext = context;
         mCallback = interfaceCallback;
+        mSelectedIndex = selectedIndex;
     }
 
     public void addActivity(String key, TimedActivity timedActivity) {
         mActivities.add(timedActivity);
         mActivityKeyIndex.put(mActivities.size() - 1, key);
+        notifyDataSetChanged();
     }
 
     public void unSelect(View view) {
@@ -91,6 +94,12 @@ public class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (position >= 0 && position < mActivities.size()) {
             ((SelectActivityView)holder).bind(mActivities.get(position));
+
+            if (mSelectedIndex >= 0 && mSelectedIndex == position) {
+                ((SelectActivityView) holder).elementBinding.getRoot().
+                        setBackgroundColor(mContext.getColor(R.color.colorAccent));
+                mSelectedIndex = -1;
+            }
         }
     }
 

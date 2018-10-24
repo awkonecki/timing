@@ -79,13 +79,11 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     }
 
     private void initializeView() {
-        // Toggle button default state
-        mBinding.tbUseNewActivityToggle.setChecked(false);
-
         // Recycler view setup
         mBinding.rvSaveTimeActivities.setAdapter(new SelectActivityAdapter(
                 this,
-                this));
+                this,
+                mSelectedIndex));
         mBinding.rvSaveTimeActivities.setLayoutManager(
                 new LinearLayoutManager(
                         this,
@@ -177,11 +175,11 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Initialize the view
-        initializeView();
-
         // Load the data.
         loadInstanceData(savedInstanceState);
+
+        // Initialize the view
+        initializeView();
     }
 
     @Override
