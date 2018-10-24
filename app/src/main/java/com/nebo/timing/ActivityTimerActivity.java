@@ -385,7 +385,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 break;
         }
     }
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
