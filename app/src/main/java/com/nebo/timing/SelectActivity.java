@@ -15,9 +15,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
-import com.nebo.timing.databinding.TimedActivityElementBinding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,84 +29,6 @@ public class SelectActivity extends AppCompatActivity {
     private List<TimedActivity> mActivities = new ArrayList<>();
     private TimedActivity mSelectedActivity = null;
     private HashMap<String, TimedActivity> mMapOfActivities = new HashMap<>();
-
-    private class SelectActivityAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-        private View mSelectedView = null;
-
-        @NonNull
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            TimedActivityElementBinding binding = DataBindingUtil.inflate(
-                    getLayoutInflater(),
-                    R.layout.timed_activity_element,
-                    parent,
-                    false);
-
-            return new SelectActivityView(binding);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            if (position >= 0 && position < mActivities.size()) {
-                ((SelectActivityView)holder).bind(mActivities.get(position));
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return mActivities.size();
-        }
-
-        public void unSelect() {
-            if (mSelectedView != null) {
-                mSelectedView.setBackgroundColor(0xFFFFFF);
-                mSelectedActivity = null;
-                mSelectedView = null;
-            }
-        }
-
-        private class SelectActivityView extends RecyclerView.ViewHolder implements View.OnClickListener {
-            private final TimedActivityElementBinding elementBinding;
-
-            public SelectActivityView(TimedActivityElementBinding binding) {
-                super(binding.getRoot());
-                elementBinding = binding;
-                elementBinding.tvTimedActivityTime.setVisibility(View.GONE);
-                itemView.setOnClickListener(this);
-            }
-
-            public void bind(TimedActivity timedActivity) {
-                elementBinding.tvTimedActivityCategory.setText(timedActivity.getCategory());
-                elementBinding.tvTimedActivityName.setText(timedActivity.getName());
-            }
-
-            @Override
-            public void onClick(View v) {
-                int index = getAdapterPosition();
-
-                if (v == mSelectedView) {
-                    mSelectedView.setBackgroundColor(0xFFFFFF);
-                    mSelectedActivity = null;
-                    mSelectedView = null;
-                }
-                else {
-                    if (index >= 0 && index < mActivities.size()) {
-                        mSelectedActivity = mActivities.get(index);
-                    }
-
-                    if (mSelectedView != null) {
-                        mSelectedView.setBackgroundColor(0xFFFFFF);
-                    }
-
-                    v.setBackgroundColor(getColor(R.color.colorAccent));
-                    mSelectedView = v;
-
-                    mBinding.tbUseNewActivityToggle.setChecked(false);
-                }
-            }
-        }
-    }
 
     private void saveSelectedAndFinish() {
         Bundle bundle = new Bundle();
@@ -163,6 +85,11 @@ public class SelectActivity extends AppCompatActivity {
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
         
         mBinding.tbUseNewActivityToggle.setChecked(false);
+
+        // if the auth state is not valid then no work to do, just return.
+        if (FirebaseAuth.getInstance().getUid() == null) {
+            finish();
+        }
 
         if (savedInstanceState != null) {
             mActivities = savedInstanceState.getParcelableArrayList(
