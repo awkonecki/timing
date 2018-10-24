@@ -39,6 +39,8 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     private Query mQuery = null;
 
     private void saveSelectedAndFinish() {
+        // TODO @awkonecki actually perform the update of the data.
+        /*
         Bundle bundle = new Bundle();
         if (mSelectedActivity != null) {
             if (mBinding.tbUseNewActivityToggle.isChecked()) {
@@ -54,6 +56,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         Intent intent = new Intent();
         intent.putExtras(bundle);
         setResult(RESULT_OK, intent);
+        */
         finish();
     }
 
@@ -108,6 +111,32 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         });
     }
 
+    private void loadInstanceData(@Nullable Bundle instanceState) {
+        if (instanceState != null) {
+            mSelectedActivity = instanceState.getParcelable(
+                    getString(R.string.key_selected_activity));
+            mSelectedKey = instanceState.getString(
+                    getString(R.string.key_timed_activity_key), null);
+            mSelectedIndex = instanceState.getInt(
+                    getString(R.string.key_selected_activity_index), -1);
+            mBinding.tbUseNewActivityToggle.setChecked(instanceState.getBoolean(
+                    getString(R.string.key_tb_status),false));
+            mBinding.etNewActivityName.setText(
+                    instanceState.getString(
+                            getString(R.string.key_new_name_string),
+                            getString(R.string.edit_activity_name_default)));
+            mBinding.etNewActivityCategory.setText(
+                    instanceState.getString(
+                            getString(R.string.key_new_category_string),
+                            getString(R.string.edit_activity_category_default)));
+
+            // TODO @awkonecki lifecycle event loading of times
+        }
+        else {
+            // TODO @awkonecki intent loading of times
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -144,23 +173,42 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         // Setup of the view
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_activity);
         setSupportActionBar(mBinding.tbSelectActivityToolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         // Initialize the view
         initializeView();
 
-        if (savedInstanceState != null) {
-
-        }
-        else {
-
-        }
+        // Load the data.
+        loadInstanceData(savedInstanceState);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        if (mSelectedActivity != null) {
+            outState.putParcelable(getString(R.string.key_selected_activity), mSelectedActivity);
+        }
+        if (mSelectedKey != null) {
+            outState.putString(getString(R.string.key_timed_activity_key), mSelectedKey);
+        }
+        if (mSelectedIndex != -1) {
+            outState.putInt(getString(R.string.key_selected_activity_index), mSelectedIndex);
+        }
+        if (mBinding.tbUseNewActivityToggle.isChecked()) {
+            outState.putBoolean(getString(R.string.key_tb_status), true);
+        }
+
+        outState.putString(
+                getString(R.string.key_new_name_string),
+                mBinding.etNewActivityName.getText().toString());
+        outState.putString(
+                getString(R.string.key_new_category_string),
+                mBinding.etNewActivityCategory.getText().toString());
+
+        // TODO @awkonecki lifecycle event saving of times
+
         super.onSaveInstanceState(outState);
-
-
     }
 
     @Override

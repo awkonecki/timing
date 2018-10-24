@@ -37,6 +37,8 @@
     <string name="lap_format" translatable="false">%s %s</string>
     <string name="label_date" translatable="true">Date</string>
     <string name="label_labels" translatable="true">Labels</string>
+    <string name="key_timed_activity_key" translatable="false">timed-activity-key</string>
+    <string name="key_timed_activity_index" translatable="false">timed-activity-index</string>
 
     <string name="fab_start_stop_description" translatable="true">Button to allow for starting and stopping the stopwatch.</string>
     <string name="fab_reset_lap_description" translatable="true">Button to allow for reseting the current time and creating a new lap.</string>
