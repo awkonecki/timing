@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEventListener {
+public class PushTimedActivity extends AsyncTaskLoader<Void> {
     private static final String TAG = "PushTimedActivity";
     private final long [] mSessionLapTimes;
     private final String mTimedActivityKey;
@@ -40,8 +40,8 @@ public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEve
 
         if (args != null) {
             mSessionLapTimes = args.getLongArray(getContext().getString(R.string.key_lap_times));
-            mTimedActivityKey = args.getString(getContext().getString(
-                    R.string.key_timed_activity_key),
+            mTimedActivityKey = args.getString(
+                    getContext().getString(R.string.key_timed_activity_key),
                     null);
             mTimedActivity = args.getParcelable(getContext().getString(R.string.key_selected_activity));
             mUserUid = args.getString(getContext().getString(R.string.key_user_uid), null);
@@ -81,7 +81,6 @@ public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEve
             // Firebase DB Reference Setup.
             DatabaseReference dbref = FirebaseDatabase.getInstance().getReference()
                     .child(getContext().getString(R.string.firebase_database_timed_activities));
-            Query query = null;
 
             // create a new session
             ActivitySession session = new ActivitySession(mSessionName);
@@ -94,11 +93,6 @@ public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEve
             // now need to see if this will be a new entry or an update to an already existing timed
             // activity.
             if (mTimedActivity == null) {
-                query = dbref
-                        .orderByChild(getContext().getString(R.string.firebase_database_activity_user))
-                        .equalTo(FirebaseAuth.getInstance().getUid());
-                query.addChildEventListener(this);
-
                 // new entry.
                 mTimedActivity = new TimedActivity(
                         mActivityName,
@@ -112,7 +106,6 @@ public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEve
                 // 1. need to go into the location into the firebase database within the
                 // timed-activities location.
                 dbref = dbref.child(mTimedActivityKey);
-                dbref.addChildEventListener(this);
 
                 // 2. add the new session to the activity.
                 mTimedActivity.addActivitySession(session);
@@ -127,51 +120,8 @@ public class PushTimedActivity extends AsyncTaskLoader<Void> implements ChildEve
                 // 4. update
                 dbref.updateChildren(updateOfSessions);
             }
-
-            // Block until know for sure firebase database can reflect the data
-            while (mWait) {}
-
-            // Cleanup
-            if (query != null) {
-                query.removeEventListener(this);
-            }
-            else {
-                dbref.removeEventListener(this);
-            }
         }
 
         return null;
-    }
-
-    @Override
-    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        if (dataSnapshot.getKey() != null && (!mSetKeys.contains(dataSnapshot.getKey()) ||
-                dataSnapshot.getKey().equals(getContext().getString(
-                        R.string.firebase_database_activity_total_elapsed_time))))
-        {
-            mWait = false;
-        }
-    }
-
-    @Override
-    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        if (dataSnapshot.getKey() != null && dataSnapshot.getKey().equals(mTimedActivityKey)) {
-            mWait = false;
-        }
-    }
-
-    @Override
-    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-
-    @Override
-    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-
-    @Override
-    public void onCancelled(@NonNull DatabaseError databaseError) {
-        Log.e (TAG, "onCancelled called with error of " +
-                databaseError.getMessage() +
-                "\n" +
-                databaseError.getDetails());
-        mWait = false;
     }
 }

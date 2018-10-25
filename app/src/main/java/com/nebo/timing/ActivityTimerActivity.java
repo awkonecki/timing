@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -27,6 +28,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivityTimerActivityBinding;
@@ -40,49 +43,37 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class ActivityTimerActivity extends AppCompatActivity implements
-    TimedActivityAdapter.OnTimedActivityClick {
+    TimedActivityAdapter.OnTimedActivityClick, ValueEventListener {
 
     private String TAG = "ActivityTimerActivity-DEBUG";
 
     private ActivityTimerActivityBinding mBinding = null;
-    private List<TimedActivity> mTimedActivities = new ArrayList<>();
-    private Map<String, TimedActivity> mKeyToTimedActivities = new TreeMap<>();
-    private Map<String, String> mActivityNameToActivityKey = new HashMap<>();
-    private Map<String, Integer> mActivityKeyToIndex = new HashMap<>();
 
     public static final int STOPWATCH_ACTIVITY = 1;
     public static final int RC_SIGN_IN = 3;
 
-    private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference mTimedActivitiesDBRef;
+    private Query mQuery;
+    private List<TimedActivity> mTimedActivities = new ArrayList<>();
 
     private long [] sessionLapTimes = null;
     private long sessionTotalTime = 0L;
-    private TimedActivity mSelectedActivity = null;
 
     private String mCurrentUser = null;
-    private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-
-    private ChildEventListener mDBChildEventListner = null;
-
     private boolean isClosing = false;
 
     private void onStopWatchClick() {
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(
-                getString(R.string.key_timed_activities),
-                (ArrayList<TimedActivity>) mTimedActivities);
         Intent intent = new Intent(getApplicationContext(), StopWatchActivity.class);
         intent.putExtras(bundle);
-        startActivityForResult(intent, STOPWATCH_ACTIVITY,
-                ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
+        startActivityForResult(intent, STOPWATCH_ACTIVITY);
     }
 
     private void selectActivity() {
         Intent intent = new Intent(getApplicationContext(), SelectActivity.class);
         Bundle bundle = new Bundle();
         bundle.putLongArray(getString(R.string.key_lap_times), sessionLapTimes);
+        bundle.putString(getString(R.string.key_user_uid), mCurrentUser);
         intent.putExtras(bundle);
 
         // clear prior to starting the activity to prevent resume from calling selectActivity again.
@@ -93,97 +84,49 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void attachDBListener() {
-        Log.d(TAG, "attachDBListener");
-
-        if (mDBChildEventListner == null) {
-            mDBChildEventListner = new ChildEventListener() {
-                @Override
-                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Log.d(TAG, "onChildAdded");
-                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
-                    if (timedActivity != null) {
-                        mKeyToTimedActivities.put(dataSnapshot.getKey(), timedActivity);
-                        mActivityNameToActivityKey.put(timedActivity.getName(), dataSnapshot.getKey());
-
-                        if (mBinding.rvTimedActivities.getAdapter() != null) {
-                            ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                                    .addNewTimedActivity(timedActivity);
-                            mTimedActivities.add(timedActivity);
-                            mActivityKeyToIndex.put(dataSnapshot.getKey(), mTimedActivities.size() - 1);
-                        }
-                        hideEmtpy();
-                        buildGraph();
-                    }
-                }
-
-                @Override
-                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Log.d(TAG, "onChildChanged");
-                    TimedActivity timedActivity = dataSnapshot.getValue(TimedActivity.class);
-
-                    if (timedActivity != null && mBinding.rvTimedActivities.getAdapter() != null) {
-                        ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
-                                .updateAtIndex(
-                                        mActivityKeyToIndex.get(dataSnapshot.getKey()).intValue(),
-                                        timedActivity);
-                    }
-                    hideEmtpy();
-                    buildGraph();
-                }
-
-                @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-
-                @Override
-                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            };
-
-            mTimedActivitiesDBRef.addChildEventListener(mDBChildEventListner);
+        if (mQuery == null
+                && mCurrentUser != null
+                && mCurrentUser.equals(FirebaseAuth.getInstance().getUid()))
+        {
+            DatabaseReference dbref = FirebaseDatabase
+                    .getInstance()
+                    .getReference()
+                    .child(getString(R.string.firebase_database_timed_activities));
+            mQuery = dbref.orderByChild(getString(R.string.firebase_database_activity_user))
+                    .equalTo(FirebaseAuth.getInstance().getUid());
+            mQuery.addValueEventListener(this);
         }
     }
 
     private void detachDBListener() {
-        Log.d(TAG, "detachDBListener");
-
-        if (mDBChildEventListner != null) {
-            Log.d(TAG, "detachDBListener");
-
-            mTimedActivitiesDBRef.removeEventListener(mDBChildEventListner);
-            mDBChildEventListner = null;
+        if (mQuery != null) {
+            mQuery.removeEventListener(this);
+            mQuery = null;
         }
     }
 
     private void onSignedInInitialize(String user) {
-        Log.d(TAG, "onSignedInInitialize");
         if (mAuthStateListener != null) {
             mCurrentUser = user;
             attachDBListener();
+
+            if (sessionLapTimes != null) {
+                selectActivity();
+            }
         }
     }
 
     private void onSignedOutCleanup() {
-        Log.d(TAG, "onSignedOutCleanup");
-
         mCurrentUser = null;
-        mTimedActivities.clear();
-        mKeyToTimedActivities.clear();
-        mActivityNameToActivityKey.clear();
-        mActivityKeyToIndex.clear();
         detachDBListener();
-
+        mTimedActivities.clear();
         if (mBinding.rvTimedActivities.getAdapter() != null) {
             ((TimedActivityAdapter)mBinding.rvTimedActivities.getAdapter()).clearActivities();
         }
     }
 
     private void createAuthStateListener() {
-        Log.d(TAG, "createAuthStateListener");
-
         if (mAuthStateListener == null) {
-            Log.d(TAG, "new AuthStateListener");
             mAuthStateListener = new FirebaseAuth.AuthStateListener() {
                 @Override
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -201,7 +144,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     RC_SIGN_IN);
                         } else {
                             // someone is already sign-in
-                            onSignedInInitialize(firebaseAuth.getCurrentUser().getDisplayName());
+                            onSignedInInitialize(FirebaseAuth.getInstance().getUid());
                         }
                     }
                 }
@@ -247,10 +190,11 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         List<PieEntry> categoryEntries = new ArrayList<>();
         for (String key : categoryElapsedTimeTotals.keySet()) {
             long time = categoryElapsedTimeTotals.get(key);
-            categoryEntries.add(new PieEntry(((float) time) / totalTime * 100, key));
+            PieEntry pieEntry = new PieEntry(((float) time) / totalTime * 100, key);
+            categoryEntries.add(pieEntry);
         }
 
-        PieDataSet pieDataSet = new PieDataSet(categoryEntries, "Category Times %");
+        PieDataSet pieDataSet = new PieDataSet(categoryEntries, getString(R.string.pie_graph_label));
         pieDataSet.setColors(ActivityTimerUtils.getColors(categoryElapsedTimeTotals.size()));
 
         PieData pieData = new PieData(pieDataSet);
@@ -290,8 +234,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 }
                 break;
             case RC_SIGN_IN:
-                Log.d(TAG, "Sign in Result");
-
                 if (resultCode == RESULT_CANCELED) {
                     finish();
                 }
@@ -323,7 +265,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                             .signOut(this)
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    Log.d(TAG, "Signout Complete");
                                     finish();
                                 }
                             });
@@ -337,23 +278,8 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate Start");
-
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_timer_activity);
         setSupportActionBar(mBinding.tbActivityTimerActivityToolbar);
-
-        // 1. get the firebase instance
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-
-        // 2. get the firebase reference to the desired child
-        mTimedActivitiesDBRef = mFirebaseDatabase
-                .getReference()
-                .child(getString(R.string.firebase_database_timed_activities));
-
-        // 1. setup the firebase auth instance.
-        mFirebaseAuth = FirebaseAuth.getInstance();
-
-        // attachDBListener();
 
         // Setup of the UI recyclerview widget
         mBinding.rvTimedActivities.setAdapter(new TimedActivityAdapter(
@@ -373,14 +299,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             // Population of the Pie chart based on previously stored data.
             buildGraph();
         }
-        Log.d(TAG, "onCreate Finish");
-
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.d(TAG, "onSaveInstanceState");
     }
 
     @Override
@@ -398,26 +316,40 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-
-        Log.d(TAG, "onResume");
         if (mAuthStateListener == null) {
             createAuthStateListener();
-            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        }
-
-        if (sessionLapTimes != null) {
-            selectActivity();
+            FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener);
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause");
         if (mAuthStateListener != null) {
-            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+            FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener);
             mAuthStateListener = null;
         }
         onSignedOutCleanup();
     }
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+            TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
+
+            if (timedActivity != null) {
+                if (mBinding.rvTimedActivities.getAdapter() != null) {
+                    ((TimedActivityAdapter) mBinding.rvTimedActivities.getAdapter())
+                            .addNewTimedActivity(timedActivity);
+                    mTimedActivities.add(timedActivity);
+                }
+            }
+        }
+
+        hideEmtpy();
+        buildGraph();
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError databaseError) {}
 }
