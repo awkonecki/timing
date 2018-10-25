@@ -3,7 +3,10 @@ package com.nebo.timing;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
+import android.content.Intent;
 import android.widget.RemoteViews;
+
+import com.nebo.timing.async.WidgetServiceListView;
 
 /**
  * Implementation of App Widget functionality.
@@ -17,6 +20,10 @@ public class TimerWidget extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.timer_widget);
         views.setTextViewText(R.id.appwidget_text, widgetText);
+
+        // Setup list of TimedActivities
+        Intent listViewWidgetService = new Intent(context, WidgetServiceListView.class);
+        views.setRemoteAdapter(R.id.lv_widget_timed_activities, listViewWidgetService);
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
