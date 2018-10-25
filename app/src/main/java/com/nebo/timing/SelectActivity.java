@@ -10,6 +10,7 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,8 +39,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     private TimedActivity mSelectedActivity = null;
     private Query mQuery = null;
     private ArrayList<String> mKeys = new ArrayList<>();
-    // TODO @awkonecki pass in logged in user uid from auth state change.
-    private String mUserUid = FirebaseAuth.getInstance().getUid();
+    private String mUserUid = null;
 
     private long mSessionTotalTime = 0L;
     private long [] mSessionLapTimes = null;
@@ -49,6 +49,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         Bundle args = new Bundle();
 
         args.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
+        Log.d("Select Activity", mUserUid + " " + FirebaseAuth.getInstance().getUid());
         args.putString(getString(R.string.key_user_uid), mUserUid);
         // TODO @awkonecki let user specify session name other than default.
         args.putString(getString(R.string.key_session_name), getString(R.string.default_session_name));
@@ -151,6 +152,8 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
                     0L);
             mSessionLapTimes = instanceState.getLongArray(
                     getString(R.string.key_lap_times));
+
+            mUserUid = instanceState.getString(getString(R.string.key_user_uid), null);
         }
         else {
             Bundle bundle = getIntent().getExtras();
@@ -161,6 +164,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
                         0L);
                 mSessionLapTimes = bundle.getLongArray(
                         getString(R.string.key_lap_times));
+                mUserUid = bundle.getString(getString(R.string.key_user_uid), null);
             }
         }
     }
@@ -231,6 +235,10 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         }
         if (mBinding.tbUseNewActivityToggle.isChecked()) {
             outState.putBoolean(getString(R.string.key_tb_status), true);
+        }
+
+        if (mUserUid != null) {
+            outState.putString(getString(R.string.key_user_uid), mUserUid);
         }
 
         outState.putString(
