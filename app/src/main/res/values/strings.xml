@@ -52,5 +52,7 @@
     <string name="image_stop_description" translatable="true">Press to stop the stopwatch.</string>
     <string name="image_reset_description" translatable="true">Press to reset the stopwatch.</string>
     <string name="image_lap_description" translatable="true">Press to create a lap.</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 
 </resources>
