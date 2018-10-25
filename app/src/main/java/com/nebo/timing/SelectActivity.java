@@ -49,7 +49,6 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         Bundle args = new Bundle();
 
         args.putLongArray(getString(R.string.key_lap_times), mSessionLapTimes);
-        Log.d("Select Activity", mUserUid + " " + FirebaseAuth.getInstance().getUid());
         args.putString(getString(R.string.key_user_uid), mUserUid);
         // TODO @awkonecki let user specify session name other than default.
         args.putString(getString(R.string.key_session_name), getString(R.string.default_session_name));

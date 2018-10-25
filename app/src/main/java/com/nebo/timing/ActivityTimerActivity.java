@@ -73,7 +73,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
         Intent intent = new Intent(getApplicationContext(), SelectActivity.class);
         Bundle bundle = new Bundle();
         bundle.putLongArray(getString(R.string.key_lap_times), sessionLapTimes);
-        Log.d(TAG, "Current user is " + mCurrentUser);
         bundle.putString(getString(R.string.key_user_uid), mCurrentUser);
         intent.putExtras(bundle);
 
@@ -107,9 +106,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     }
 
     private void onSignedInInitialize(String user) {
-        Log.d(TAG, "onSignedInInitialize " + user + " " + FirebaseAuth.getInstance().getUid());
         if (mAuthStateListener != null) {
-            Log.d(TAG, "onSignedInInitialize true " + FirebaseAuth.getInstance().getUid());
             mCurrentUser = user;
             attachDBListener();
 
@@ -135,7 +132,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                     if (!isClosing) {
                         if (firebaseAuth.getCurrentUser() == null) {
-                            Log.d(TAG, "Create AuthStateListener new");
                             // No one is signed-in
                             startActivityForResult(
                                     AuthUI.getInstance()
@@ -148,7 +144,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
                                     RC_SIGN_IN);
                         } else {
                             // someone is already sign-in
-                            Log.d(TAG, "Create AuthStateListener else " + FirebaseAuth.getInstance().getUid());
                             onSignedInInitialize(FirebaseAuth.getInstance().getUid());
                         }
                     }
@@ -321,7 +316,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
         if (mAuthStateListener == null) {
             createAuthStateListener();
             FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener);
@@ -331,7 +325,6 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause");
         if (mAuthStateListener != null) {
             FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener);
             mAuthStateListener = null;
