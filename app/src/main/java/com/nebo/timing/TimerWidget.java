@@ -16,10 +16,10 @@ public class TimerWidget extends AppWidgetProvider {
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 
-        CharSequence widgetText = context.getString(R.string.appwidget_text);
+        // CharSequence widgetText = context.getString(R.string.appwidget_text);
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.timer_widget);
-        views.setTextViewText(R.id.appwidget_text, widgetText);
+        // views.setTextViewText(R.id.appwidget_text, widgetText);
 
         // Setup list of TimedActivities
         Intent listViewWidgetService = new Intent(context, WidgetServiceListView.class);

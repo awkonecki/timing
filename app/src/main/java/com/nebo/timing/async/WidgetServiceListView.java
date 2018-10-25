@@ -3,7 +3,6 @@ package com.nebo.timing.async;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -11,7 +10,6 @@ import android.widget.RemoteViewsService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -101,10 +99,9 @@ public class WidgetServiceListView extends RemoteViewsService {
                 TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
                 if (timedActivity != null) {
                     mTimedActivities.add(timedActivity);
-                    AppWidgetManager.getInstance(mContext).notifyAll();
-                    // AppWidgetManager.getInstance(mContext).notifyAppWidgetViewDataChanged(mAppWidgetId,);
                 }
             }
+            AppWidgetManager.getInstance(mContext).notifyAppWidgetViewDataChanged(mAppWidgetId, 0);
         }
 
         @Override

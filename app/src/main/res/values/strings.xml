@@ -44,6 +44,9 @@
     <string name="default_session_name" translatable="true">Session</string>
     <string name="key_timed_activity_keys" translatable="false">timed-activity-keys</string>
     <string name="pie_graph_label" translatable="true">Category Times %</string>
+    <string name="label_name" translatable="true">Name</string>
+    <string name="label_category" translatable="true">Category</string>
+    <string name="label_time" translatable="true">Time</string>
 
     <string name="fab_start_stop_description" translatable="true">Button to allow for starting and stopping the stopwatch.</string>
     <string name="fab_reset_lap_description" translatable="true">Button to allow for reseting the current time and creating a new lap.</string>

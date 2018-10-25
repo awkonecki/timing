@@ -1,9 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#09C"
-    android:padding="@dimen/widget_margin">
+    android:padding="@dimen/widget_margin" >
 
+    <!--
     <TextView
         android:id="@+id/appwidget_text"
         android:layout_width="wrap_content"
@@ -18,9 +18,42 @@
         android:textSize="24sp"
         android:textStyle="bold|italic" />
 
-    <ListView
-        android:id="@+id/lv_widget_timed_activities"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/ll_column_names"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/tv_widget_timed_activity_name"
+                android:text="@string/label_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:id="@+id/tv_widget_timed_activity_category"
+                android:text="@string/label_category"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:id="@+id/tv_widget_timed_activity_time"
+                android:text="@string/label_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+        </LinearLayout>
+    -->
+    
+        <ListView
+            android:id="@+id/lv_widget_timed_activities"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
 </RelativeLayout>
