@@ -2,6 +2,7 @@ package com.nebo.timing;
 
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,18 +20,20 @@ import android.view.Window;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.nebo.timing.async.PushTimedActivity;
+import com.nebo.timing.data.ActivitySession;
 import com.nebo.timing.data.TimedActivity;
 import com.nebo.timing.databinding.ActivitySelectActivityBinding;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SelectActivity extends AppCompatActivity implements ValueEventListener,
-        SelectActivityAdapter.OnActivitySelection,
-        LoaderManager.LoaderCallbacks<Void> {
+        SelectActivityAdapter.OnActivitySelection {
 
     private static final int ASYNC_PUSH_DATA = 1;
     private ActivitySelectActivityBinding mBinding = null;
@@ -43,6 +46,98 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
 
     private long mSessionTotalTime = 0L;
     private long [] mSessionLapTimes = null;
+    private boolean mSaving = false;
+
+    private class SaveTimedActivity extends AsyncTask<Bundle, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Bundle... bundles) {
+            long [] mSessionLapTimes;
+            String mTimedActivityKey;
+            TimedActivity mTimedActivity = null;
+            String mUserUid;
+            String mSessionName;
+            String mActivityName;
+            String mCategoryName;
+
+            if (bundles != null && bundles.length > 0) {
+                for (Bundle args : bundles) {
+                    mSessionLapTimes = args.getLongArray(getApplicationContext().getString(R.string.key_lap_times));
+                    mTimedActivityKey = args.getString(
+                            getApplicationContext().getString(R.string.key_timed_activity_key),
+                            null);
+                    mTimedActivity = args.getParcelable(getApplicationContext()
+                            .getString(R.string.key_selected_activity));
+                    mUserUid = args.getString(getApplicationContext()
+                            .getString(R.string.key_user_uid), null);
+                    mSessionName = args.getString(
+                            getApplicationContext().getString(R.string.key_session_name),
+                            getApplicationContext().getString(R.string.default_session_name));
+                    mActivityName = args.getString(
+                            getApplicationContext().getString(R.string.key_new_name_string),
+                            getApplicationContext().getString(R.string.edit_activity_name_default));
+                    mCategoryName = args.getString(
+                            getApplicationContext().getString(R.string.key_new_category_string),
+                            getApplicationContext().getString(R.string.edit_activity_category_default));
+                    ArrayList<String> keys = args.getStringArrayList(
+                            getApplicationContext().getString(R.string.key_timed_activity_keys));
+
+                    // Make sure that the current auth user id is equal to the target user id that
+                    // logged in.
+                    if (mUserUid != null && mUserUid.equals(FirebaseAuth.getInstance().getUid())) {
+
+                        // Firebase DB Reference Setup.
+                        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference()
+                                .child(getApplicationContext()
+                                        .getString(R.string.firebase_database_timed_activities));
+
+                        // create a new session
+                        ActivitySession session = new ActivitySession(mSessionName);
+                        if (mSessionLapTimes != null) {
+                            for (long sessionLap : mSessionLapTimes) {
+                                session.addSessionLapTime(sessionLap);
+                            }
+                        }
+
+                        // now need to see if this will be a new entry or an update to an already
+                        // existing timed activity.
+                        if (mTimedActivity == null) {
+                            // new entry.
+                            mTimedActivity = new TimedActivity(
+                                    mActivityName,
+                                    mCategoryName,
+                                    FirebaseAuth.getInstance().getUid());
+                            mTimedActivity.addActivitySession(session);
+                            dbref.push().setValue(mTimedActivity);
+                        }
+                        else {
+                            // update existing.
+                            // 1. need to go into the location into the firebase database within the
+                            // timed-activities location.
+                            dbref = dbref.child(mTimedActivityKey);
+
+                            // 2. add the new session to the activity.
+                            mTimedActivity.addActivitySession(session);
+                            // 3. get the list and update with a map.
+                            Map<String, Object> updateOfSessions = new HashMap<>();
+                            updateOfSessions.put(
+                                    getApplicationContext()
+                                            .getString(R.string.firebase_database_activity_sessions),
+                                    mTimedActivity.getActivitySessions());
+                            updateOfSessions.put(
+                                    getApplicationContext()
+                                            .getString(R.string.firebase_database_activity_total_elapsed_time),
+                                    mTimedActivity.getTotalElapsedTime());
+                            // 4. update
+                            dbref.updateChildren(updateOfSessions);
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
 
     private void saveSelectedAndFinish() {
         // Create the bundle for the async task
@@ -67,15 +162,11 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
 
         }
 
-        detachQueryListener();
+        // for handling for when new data comes back.
+        mSaving = true;
 
-        // Launch of the async task.
-        if (getSupportLoaderManager().getLoader(ASYNC_PUSH_DATA) == null) {
-            getSupportLoaderManager().initLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
-        }
-        else {
-            getSupportLoaderManager().restartLoader(ASYNC_PUSH_DATA, args, this).forceLoad();
-        }
+        // Launch the aysnc task
+        (new SaveTimedActivity()).execute(args);
     }
 
     private void attachQueryListener() {
@@ -272,6 +363,10 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
             ((SelectActivityAdapter) mBinding.rvSaveTimeActivities.getAdapter())
                     .addActivity(snapshot.getKey(), timedActivity);
             mKeys.add(snapshot.getKey());
+
+            if (mSaving) {
+                finish();
+            }
         }
     }
 
@@ -299,29 +394,4 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
         // Toggle button default state
         mBinding.tbUseNewActivityToggle.setChecked(false);
     }
-
-    @NonNull
-    @Override
-    public Loader<Void> onCreateLoader(int id, @Nullable Bundle args) {
-        Loader<Void> loader = null;
-
-        switch (id) {
-            case ASYNC_PUSH_DATA:
-                loader = new PushTimedActivity(this, args);
-                break;
-            default:
-                loader = new Loader<>(this);
-                break;
-        }
-
-        return loader;
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<Void> loader, Void data) {
-        finish();
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<Void> loader) {}
 }
