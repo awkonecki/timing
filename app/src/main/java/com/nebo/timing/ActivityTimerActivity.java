@@ -108,6 +108,14 @@ public class ActivityTimerActivity extends AppCompatActivity implements
     private void onSignedInInitialize(String user) {
         if (mAuthStateListener != null) {
             mCurrentUser = user;
+
+            if (getSharedPreferences(getString(R.string.sp_timer), MODE_PRIVATE) != null) {
+                getSharedPreferences(getString(R.string.sp_timer), MODE_PRIVATE).edit()
+                        .putString(getString(R.string.key_user_uid), mCurrentUser)
+                        .apply();
+                TimerWidget.sendRefreshBoardcast(getApplicationContext());
+            }
+
             attachDBListener();
 
             if (sessionLapTimes != null) {
@@ -346,6 +354,7 @@ public class ActivityTimerActivity extends AppCompatActivity implements
             }
         }
 
+        TimerWidget.sendRefreshBoardcast(getApplicationContext());
         hideEmtpy();
         buildGraph();
     }
