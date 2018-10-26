@@ -18,6 +18,8 @@ import com.nebo.timing.data.StopWatch;
 import com.nebo.timing.data.TimedActivity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class WidgetServiceListView extends RemoteViewsService {
@@ -33,6 +35,7 @@ public class WidgetServiceListView extends RemoteViewsService {
         private int mAppWidgetId;
         private Query mQuery = null;
         private List<TimedActivity> mTimedActivities = new ArrayList<>();
+        private HashMap<String, Integer> mActivityKeysToIndex = new HashMap<>();
 
         public TimedActivityRemoteViewsFactory(Context context, Intent intent) {
             mContext = context;
@@ -43,11 +46,20 @@ public class WidgetServiceListView extends RemoteViewsService {
 
         @Override
         public void onCreate() {
-            mQuery = FirebaseDatabase.getInstance().getReference()
-                    .child(getString(R.string.firebase_database_timed_activities))
-                    .orderByChild(getString(R.string.firebase_database_activity_user))
-                    .equalTo(FirebaseAuth.getInstance().getUid());
-            mQuery.addValueEventListener(this);
+            String userId = null;
+
+            if (getSharedPreferences(getString(R.string.sp_timer), MODE_PRIVATE) != null) {
+                userId = getSharedPreferences(getString(R.string.sp_timer), MODE_PRIVATE)
+                        .getString(getString(R.string.key_user_uid), null);
+            }
+
+            if (userId != null) {
+                mQuery = FirebaseDatabase.getInstance().getReference()
+                        .child(getString(R.string.firebase_database_timed_activities))
+                        .orderByChild(getString(R.string.firebase_database_activity_user))
+                        .equalTo(userId);
+                mQuery.addValueEventListener(this);
+            }
         }
 
         @Override
@@ -55,8 +67,10 @@ public class WidgetServiceListView extends RemoteViewsService {
 
         @Override
         public void onDestroy() {
-            mQuery.removeEventListener(this);
-            mQuery = null;
+            if (mQuery != null) {
+                mQuery.removeEventListener(this);
+                mQuery = null;
+            }
         }
 
         @Override
@@ -98,10 +112,18 @@ public class WidgetServiceListView extends RemoteViewsService {
             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                 TimedActivity timedActivity = snapshot.getValue(TimedActivity.class);
                 if (timedActivity != null) {
-                    mTimedActivities.add(timedActivity);
+                    if (mActivityKeysToIndex.containsKey(snapshot.getKey())) {
+                        mTimedActivities.set(mActivityKeysToIndex.get(snapshot.getKey()), timedActivity);
+                    }
+                    else {
+                        mTimedActivities.add(timedActivity);
+                        mActivityKeysToIndex.put(snapshot.getKey(), mTimedActivities.size() - 1);
+                    }
+                    AppWidgetManager
+                            .getInstance(mContext)
+                            .notifyAppWidgetViewDataChanged(mAppWidgetId, 0);
                 }
             }
-            AppWidgetManager.getInstance(mContext).notifyAppWidgetViewDataChanged(mAppWidgetId, 0);
         }
 
         @Override
