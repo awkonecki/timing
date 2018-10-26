@@ -5,7 +5,7 @@ android {
         config {
             keyAlias 'key-udacity'
             keyPassword 'Udacity'
-            storeFile file('/Users/nebo/Documents/nebo_ws/timing/app/key_store')
+            storeFile file('key_store')
             storePassword 'Udacity'
         }
     }
