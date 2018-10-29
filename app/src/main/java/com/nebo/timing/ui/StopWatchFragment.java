@@ -27,7 +27,6 @@ public class StopWatchFragment extends Fragment {
     private FragmentStopWatchBinding mBinding = null;
     private StopWatch mStopWatch = new StopWatch(new TimeIntervalTick());
     private List<Long> mLapTimes = new LinkedList<Long>();
-    // private long mLastLapTime = 0L;
 
     private class LapAdapter extends RecyclerView.Adapter<LapAdapter.LapView> {
         private LapElementBinding mBinding = null;
@@ -165,7 +164,6 @@ public class StopWatchFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView");
         mBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_stop_watch, container, false);
 
         mBinding.ibPlay.setOnClickListener(new View.OnClickListener() {
