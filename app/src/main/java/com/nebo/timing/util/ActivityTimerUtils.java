@@ -3,6 +3,9 @@ package com.nebo.timing.util;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 public class ActivityTimerUtils {
+
+    private ActivityTimerUtils() {}
+
     public static int[] getColors(int count) {
         // have as many colors as stack-values per entry
         int[] colors = new int[count];
