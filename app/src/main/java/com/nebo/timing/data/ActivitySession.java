@@ -1,30 +1,23 @@
 package com.nebo.timing.data;
 
-import android.nfc.NfcAdapter;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class ActivitySession implements Parcelable {
     private String name = null;
-    private long sessionStartDate = 0L;
     private long totalTime = 0L;
     private List<Long> sessionLapTimes = new ArrayList<>();
-    private HashSet<String> labels = new HashSet<String>();
 
     private ActivitySession(Parcel parcel) {
         if (parcel != null) {
             name = parcel.readString();
-            sessionStartDate = parcel.readLong();
             totalTime = parcel.readLong();
             parcel.readList(sessionLapTimes, null);
 
             // TODO @awkonecki figure out if or need labels.
-            // String [] tempLabels = new String [parcel.dataSize()];
-            // parcel.readStringArray(tempLabels);
         }
     }
 
@@ -49,14 +42,6 @@ public class ActivitySession implements Parcelable {
 
     public String getName() {
         return this.name;
-    }
-
-    public void setSessionStartDate(long startDate) {
-        this.sessionStartDate = startDate;
-    }
-
-    public long getSessionStartDate() {
-        return this.sessionStartDate;
     }
 
     public List<Long> getSessionLapTimes() {
@@ -88,7 +73,6 @@ public class ActivitySession implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         if (dest != null) {
             dest.writeString(name);
-            dest.writeLong(sessionStartDate);
             dest.writeLong(totalTime);
             dest.writeList(sessionLapTimes);
         }
