@@ -1,5 +1,6 @@
 package com.nebo.timing;
 
+import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.AsyncTask;
@@ -48,86 +49,87 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
     private long [] mSessionLapTimes = null;
     private boolean mSaving = false;
 
-    private class SaveTimedActivity extends AsyncTask<Bundle, Void, Void> {
+    private static Context sContext = null;
+
+    private static class SaveTimedActivity extends AsyncTask<Bundle, Void, Void> {
 
         @Override
         protected Void doInBackground(Bundle... bundles) {
-            long [] mSessionLapTimes;
-            String mTimedActivityKey;
-            TimedActivity mTimedActivity = null;
-            String mUserUid;
-            String mSessionName;
-            String mActivityName;
-            String mCategoryName;
+            long [] sessionLapTimes;
+            String timedActivityKey;
+            TimedActivity timedActivity = null;
+            String userUid;
+            String sessionName;
+            String activityName;
+            String categoryName;
 
             if (bundles != null && bundles.length > 0) {
                 for (Bundle args : bundles) {
-                    mSessionLapTimes = args.getLongArray(getApplicationContext().getString(R.string.key_lap_times));
-                    mTimedActivityKey = args.getString(
-                            getApplicationContext().getString(R.string.key_timed_activity_key),
+                    sessionLapTimes = args.getLongArray(sContext.getString(R.string.key_lap_times));
+                    timedActivityKey = args.getString(
+                            sContext.getString(R.string.key_timed_activity_key),
                             null);
-                    mTimedActivity = args.getParcelable(getApplicationContext()
+                    timedActivity = args.getParcelable(sContext
                             .getString(R.string.key_selected_activity));
-                    mUserUid = args.getString(getApplicationContext()
+                    userUid = args.getString(sContext
                             .getString(R.string.key_user_uid), null);
-                    mSessionName = args.getString(
-                            getApplicationContext().getString(R.string.key_session_name),
-                            getApplicationContext().getString(R.string.default_session_name));
-                    mActivityName = args.getString(
-                            getApplicationContext().getString(R.string.key_new_name_string),
-                            getApplicationContext().getString(R.string.edit_activity_name_default));
-                    mCategoryName = args.getString(
-                            getApplicationContext().getString(R.string.key_new_category_string),
-                            getApplicationContext().getString(R.string.edit_activity_category_default));
+                    sessionName = args.getString(
+                            sContext.getString(R.string.key_session_name),
+                            sContext.getString(R.string.default_session_name));
+                    activityName = args.getString(
+                            sContext.getString(R.string.key_new_name_string),
+                            sContext.getString(R.string.edit_activity_name_default));
+                    categoryName = args.getString(
+                            sContext.getString(R.string.key_new_category_string),
+                            sContext.getString(R.string.edit_activity_category_default));
                     ArrayList<String> keys = args.getStringArrayList(
-                            getApplicationContext().getString(R.string.key_timed_activity_keys));
+                            sContext.getString(R.string.key_timed_activity_keys));
 
                     // Make sure that the current auth user id is equal to the target user id that
                     // logged in.
-                    if (mUserUid != null && mUserUid.equals(FirebaseAuth.getInstance().getUid())) {
+                    if (userUid != null && userUid.equals(FirebaseAuth.getInstance().getUid())) {
 
                         // Firebase DB Reference Setup.
                         DatabaseReference dbref = FirebaseDatabase.getInstance().getReference()
-                                .child(getApplicationContext()
+                                .child(sContext
                                         .getString(R.string.firebase_database_timed_activities));
 
                         // create a new session
-                        ActivitySession session = new ActivitySession(mSessionName);
-                        if (mSessionLapTimes != null) {
-                            for (long sessionLap : mSessionLapTimes) {
+                        ActivitySession session = new ActivitySession(sessionName);
+                        if (sessionLapTimes != null) {
+                            for (long sessionLap : sessionLapTimes) {
                                 session.addSessionLapTime(sessionLap);
                             }
                         }
 
                         // now need to see if this will be a new entry or an update to an already
                         // existing timed activity.
-                        if (mTimedActivity == null) {
+                        if (timedActivity == null) {
                             // new entry.
-                            mTimedActivity = new TimedActivity(
-                                    mActivityName,
-                                    mCategoryName,
+                            timedActivity = new TimedActivity(
+                                    activityName,
+                                    categoryName,
                                     FirebaseAuth.getInstance().getUid());
-                            mTimedActivity.addActivitySession(session);
-                            dbref.push().setValue(mTimedActivity);
+                            timedActivity.addActivitySession(session);
+                            dbref.push().setValue(timedActivity);
                         }
                         else {
                             // update existing.
                             // 1. need to go into the location into the firebase database within the
                             // timed-activities location.
-                            dbref = dbref.child(mTimedActivityKey);
+                            dbref = dbref.child(timedActivityKey);
 
                             // 2. add the new session to the activity.
-                            mTimedActivity.addActivitySession(session);
+                            timedActivity.addActivitySession(session);
                             // 3. get the list and update with a map.
                             Map<String, Object> updateOfSessions = new HashMap<>();
                             updateOfSessions.put(
-                                    getApplicationContext()
+                                    sContext
                                             .getString(R.string.firebase_database_activity_sessions),
-                                    mTimedActivity.getActivitySessions());
+                                    timedActivity.getActivitySessions());
                             updateOfSessions.put(
-                                    getApplicationContext()
-                                            .getString(R.string.firebase_database_activity_total_elapsed_time),
-                                    mTimedActivity.getTotalElapsedTime());
+                                    sContext.getString(R.string.firebase_database_activity_total_elapsed_time),
+                                    timedActivity.getTotalElapsedTime());
                             // 4. update
                             dbref.updateChildren(updateOfSessions);
                         }
@@ -164,6 +166,7 @@ public class SelectActivity extends AppCompatActivity implements ValueEventListe
 
         // for handling for when new data comes back.
         mSaving = true;
+        SelectActivity.sContext = getApplicationContext();
 
         // Launch the aysnc task
         (new SaveTimedActivity()).execute(args);
